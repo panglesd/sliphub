@@ -5,21 +5,20 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github pangled/sliphub))
 
-(authors "Author Name")
+(authors "Paul-Elliot Anglès d'Auriac")
 
-(maintainers "Maintainer Name")
+(maintainers "Paul-Elliot Anglès d'Auriac")
 
-(license LICENSE)
-
-(documentation https://url/to/documentation)
+(license GPL-3.0-or-later)
 
 (package
  (name sliphub)
- (synopsis "A short synopsis")
- (description "A longer description")
- (depends ocaml dune)
+ (synopsis "A website to live edit your slipshow presentations")
+ (description
+  "A website to live edit your slipshow presentations. Can also be used to remotely store your presentations.")
+ (depends ocaml dune js_of_ocaml dream camlot)
  (tags
   (topics "to describe" your project)))
 
