@@ -1,0 +1,35 @@
+
+(rule
+ (deps %{project_root}/client/bin/client.bc.js)
+ (target "index.js")
+ (action
+  (copy %{deps} %{target})))
+
+(rule
+ (aliases runtest data-files)
+ (target data_contents.ml)
+ (deps
+   (file "index.js")
+  (glob_files *.js)
+  (glob_files *.css))
+ (action
+  (setenv
+    SOURCE_DATE_EPOCH
+    0
+   (run
+     ocaml-crunch
+     .
+     -e
+     js
+     -e
+     css
+     -o
+     data_contents.ml
+     -m
+     plain
+     -s))))
+
+(library
+ (name data_files)
+ (public_name sliphub.datafiles)
+ (wrapped false))

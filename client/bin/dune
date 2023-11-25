@@ -1,0 +1,4 @@
+(executable
+ (name client)
+ (modes js)
+ (libraries camlot brr js_of_ocaml-lwt lwt))
