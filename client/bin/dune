@@ -1,4 +1,11 @@
 (executable
  (name client)
  (modes js)
- (libraries camlot brr js_of_ocaml-lwt lwt))
+ (libraries
+  brr
+  js_of_ocaml-lwt
+  lwt
+  code-mirror
+  slip_of_mark
+  camlot
+  yojson))

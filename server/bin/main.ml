@@ -13,37 +13,22 @@ module State = struct
   let _set_doc id value = Docs.replace docs id value
 end
 
-(* let () = *)
-(*   Dream.run @@ Dream.logger *)
-(*   @@ Dream.router *)
-(*        [ *)
-(*          Dream.get "/get/:id" (fun request -> *)
-(*              Dream.html (State.get_doc (Dream.param request "word"))); *)
-(*          Dream.get "/echo/:word" (fun request -> *)
-(*              Dream.html (Dream.param request "word")); *)
-(*        ] *)
-
-let home =
-  {|
-  <html>
-  <body>
-    <script src="index.js">
-    </script>
-  </body>
-  </html>
-            |}
-
 open Lwt.Syntax
 
 let () =
   Dream.run @@ Dream.logger
   @@ Dream.router
        [
-         Dream.get "/" (fun _ -> Dream.html home);
+         Dream.get "/" (fun _ -> Dream.html Data_files.(read Index_html));
          Dream.get "/index.js" (fun _ ->
              let response = Dream.response Data_files.(read Index_js) in
              Dream.add_header response "charset" "utf-8";
              Dream.add_header response "Content-Type" "text/javascript";
+             Lwt.return response);
+         Dream.get "/index.css" (fun _ ->
+             let response = Dream.response Data_files.(read Index_css) in
+             Dream.add_header response "charset" "utf-8";
+             Dream.add_header response "Content-Type" "text/css";
              Lwt.return response);
          Dream.get "/websocket" (fun _ ->
              Dream.websocket ~close:false (fun websocket ->

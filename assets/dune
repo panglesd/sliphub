@@ -6,10 +6,24 @@
   (copy %{deps} %{target})))
 
 (rule
+ (deps %{project_root}/client/bin/index.html)
+ (target "index.html")
+ (action
+  (copy %{deps} %{target})))
+
+(rule
+ (deps %{project_root}/client/bin/index.css)
+ (target "index.css")
+ (action
+  (copy %{deps} %{target})))
+
+(rule
  (aliases runtest data-files)
  (target data_contents.ml)
  (deps
    (file "index.js")
+   (file "index.html")
+   (file "index.css")
   (glob_files *.js)
   (glob_files *.css))
  (action
@@ -23,6 +37,8 @@
      js
      -e
      css
+     -e
+     html
      -o
      data_contents.ml
      -m
@@ -31,5 +47,4 @@
 
 (library
  (name data_files)
- (public_name sliphub.datafiles)
- (wrapped false))
+ (public_name sliphub.datafiles))
