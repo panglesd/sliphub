@@ -1,4 +1,4 @@
 (executable
  (public_name sliphub)
  (name main)
- (libraries sliphub dream data_files))
+ (libraries sliphub dream data_files yojson petrol))

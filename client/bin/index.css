@@ -7,6 +7,10 @@ body {
     height: calc(100vh - 4px);
 }
 
+#editor {
+    height:100vh;
+}
+
 #right-panel {
     width: 50%;
     /* 2px per border */
@@ -18,3 +22,37 @@ body {
     /* 2px per border */
     height: calc(100vh - 4px);
 }
+
+    #editor {
+      overflow: hidden;
+      background-color: white;
+    }
+
+    .cm-editor {
+      height: 100%;
+    }
+
+    .cm-tooltip,
+    .cm-completionLabel,
+    .cm-completionMatchedText,
+    .cm-completionDetail {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+    }
+
+    .cm-editor .cm-tooltip {
+      max-width: 25rem;
+      border-radius: 0.25rem;
+      overflow: hidden;
+    }
+
+    .cm-editor .cm-tooltip-hover {
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+      padding-top: 0.25rem;
+      padding-bottom: 0.25rem;
+    }
+
+    .cm-editor .cm-content {
+      font-family: 'Fira Code', monospace;
+    }

@@ -1,37 +1,3 @@
-let () =
-  let open Brr_io.Websocket in
-  let ws = create (Jstr.v "ws://localhost:8080/websocket") in
-
-  let i = ref 0 in
-  let _listener =
-    Brr.Ev.listen Brr_io.Message.Ev.message
-      (fun event ->
-        Format.printf "i is %d\n%!" !i;
-        incr i;
-        let str : Jstr.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
-        print_endline (Jstr.to_string str))
-      (as_target ws)
-  in
-  let when_open _ =
-    let send () =
-      let open Brr_io.Websocket in
-      print_endline "state is";
-      print_endline
-      @@
-      if ready_state ws = Ready_state.open' then "open"
-      else if ready_state ws = Ready_state.closed then "closed"
-      else if ready_state ws = Ready_state.connecting then "connecting"
-      else (* if ready_state ws = Ready_state.closing then *) "closing";
-      if ready_state ws = Ready_state.open' then
-        send_string ws (Jstr.v "Hello?")
-    in
-    for _ = 0 to 10 do
-      send ()
-    done
-  in
-  let _open_listener = Brr.Ev.listen Brr.Ev.open' when_open (as_target ws) in
-  ()
-
 open Code_mirror
 
 let push view =
@@ -41,6 +7,7 @@ let push view =
   if List.is_empty updates then ()
   else
     let version = Collab.getSyncedVersion state in
+    let updates = List.map fst updates in
     let _ = Communication.push_updates version updates in
     ()
 
@@ -57,7 +24,10 @@ let peer_plugin =
       let destruct () = () in
       { update; destruct })
 
-let slipshow_plugin =
+open Lwt.Syntax
+
+let update_slipshow view =
+  let open Editor in
   let result =
     match Brr.El.find_first_by_selector (Jstr.v "#right-panel") with
     | None ->
@@ -65,38 +35,39 @@ let slipshow_plugin =
         assert false
     | Some x -> x
   in
+  let content =
+    let state = View.state view in
+    let text = State.doc state in
+    let lines =
+      Text.to_jstr_array text |> Array.map Jstr.to_string |> Array.to_list
+    in
+    String.concat "\n" lines
+  in
+  let slipshow = Slip_of_mark.convert content in
+  let () = Jv.set (Brr.El.to_jv result) "srcdoc" (Jv.of_string slipshow) in
+  ()
+
+let slipshow_plugin =
   let open Editor in
   View.ViewPlugin.define (fun view ->
       let update upd =
-        if View.Update.docChanged upd then
-          let content =
-            let state = View.state view in
-            let text = State.doc state in
-            let lines =
-              Text.to_jstr_array text |> Array.map Jstr.to_string
-              |> Array.to_list
-            in
-            String.concat "\n" lines
-          in
-          let slipshow = Slip_of_mark.convert content in
-          let () =
-            Jv.set (Brr.El.to_jv result) "srcdoc" (Jv.of_string slipshow)
-          in
-          ()
-        else ()
+        if View.Update.docChanged upd then update_slipshow view else ()
       in
       let destruct () = () in
       { update; destruct })
 
 let state =
   let open Editor in
-  let collab = Collab.collab () in
+  let+ start_version, doc = Communication.getDocument () in
+  Format.printf "START VERSION IS %d\n%!" start_version;
+  let config = Collab.config ~start_version () in
+  let collab = Collab.collab ~config () in
   let basic_setup = Jv.get Jv.global "__CM__basic_setup" |> Extension.of_jv in
   let markdown_extension =
     Jv.apply (Jv.get Jv.global "__CM__markdown") [||] |> Extension.of_jv
   in
   let config =
-    State.Config.create
+    State.Config.create ~doc:(Jstr.v doc)
       ~extensions:
         [|
           collab; peer_plugin; basic_setup; slipshow_plugin; markdown_extension;
@@ -107,6 +78,42 @@ let state =
 
 let parent = Brr.El.find_first_by_selector (Jstr.v "#editor") |> Option.get
 
-let _view =
+let view =
+  let+ state in
   let opts = Editor.View.opts ~state ~parent () in
   Editor.View.create ~opts ()
+
+let get_version () =
+  let+ view in
+  let state = Editor.View.state view in
+  let get_version = Collab.getSyncedVersion state in
+  Format.printf "version is %d\n%!" get_version
+
+let _ =
+  let+ view in
+  update_slipshow view;
+  let _ = Jv.set Jv.global "view" (Editor.View.to_jv view) in
+
+  let get_version () =
+    let state = Editor.View.state view in
+    Collab.getSyncedVersion state
+  in
+  Communication.recv_updates
+    (fun changes ->
+      Format.printf "receiving changes!%!\n";
+      let _ =
+        let update =
+          List.map (fun (id, change) -> Collab.Update.make change id) changes
+        in
+        List.iter (fun upd -> Brr.Console.(log [ upd ])) update;
+        let state = Editor.View.state view in
+
+        let transaction = Collab.receiveUpdates state update in
+        Brr.Console.(log [ transaction ]);
+        let _ = Editor.View.dispatch view [ transaction ] in
+        ()
+      in
+      ())
+    get_version
+
+let _ = Jv.set Jv.global "get_version" (Jv.callback ~arity:1 get_version)
