@@ -34,21 +34,40 @@ module Message = struct
     | _ -> failwith "wrong message"
 end
 
+let uri order =
+  let uri = Brr.Window.location Brr.G.window in
+  let id =
+    let rec tl = function [] -> Jstr.v "aaaa" | [ a ] -> a | _ :: q -> tl q in
+    let l = Brr.Uri.path_segments uri |> Result.get_ok in
+    tl l
+  in
+  (* let host = Jstr.to_string @@ Brr.Uri.host uri in *)
+  let scheme = Jstr.v "ws" in
+  let uri = Brr.Uri.with_uri ~scheme uri |> Result.get_ok in
+  let order =
+    match order with
+    | `GetDoc -> "getDocument"
+    | `Push -> "push"
+    | `Pull -> "pull"
+  in
+  let uri =
+    Brr.Uri.with_path_segments uri [ Jstr.v "websocket"; Jstr.v order; id ]
+  in
+  uri |> Result.get_ok
+
 module Comm = struct
   open Brr_io.Websocket
 
   let send upd =
-    let ws =
-      Brr_io.Websocket.create (Jstr.v "ws://localhost:8080/websocket/push/a")
-    in
+    let uri = uri `Push in
+    let ws = Brr_io.Websocket.create (Brr.Uri.to_jstr uri) in
     let on_open _event = send_string ws (Jstr.v upd) in
     let _open_listener = Brr.Ev.listen Brr.Ev.open' on_open (as_target ws) in
     ws
 
   let rec recv callback get_version =
-    let ws =
-      Brr_io.Websocket.create (Jstr.v "ws://localhost:8080/websocket/pull/a")
-    in
+    let uri = uri `Pull in
+    let ws = Brr_io.Websocket.create (Brr.Uri.to_jstr uri) in
     let on_message event =
       let raw_data : Jstr.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
       let data = Message.of_string (Jstr.to_string raw_data) in
@@ -81,7 +100,8 @@ let recv_updates callback get_version = Comm.recv callback get_version
 
 let getDocument () =
   let open Brr_io.Websocket in
-  let ws = create (Jstr.v "ws://localhost:8080/websocket/getDocument/a") in
+  let uri = uri `GetDoc in
+  let ws = create (Brr.Uri.to_jstr uri) in
   let document_of_string s =
     let json = Yojson.Safe.from_string s in
     match json with

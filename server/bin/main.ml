@@ -188,20 +188,28 @@ module Pending = struct
       pendings
 end
 
+let () = Random.self_init ()
+
 let () =
   Dream.run
   (* ~interface:"0.0.0.0" *)
   @@ Dream.logger
   @@ Dream.router
        [
-         Dream.get "/" (fun _ -> Dream.html Data_files.(read Index_html));
+         Dream.get "/" (fun _ ->
+             let intro_pres = Assets.(read Intro_pres) in
+             let html = Slip_of_mark.convert intro_pres in
+             Dream.html html);
+         Dream.get "/new" (fun request ->
+             let id = String.init 10 (fun _ -> Char.chr (97 + Random.int 26)) in
+             Dream.redirect request ("/" ^ id));
          Dream.get "/index.js" (fun _ ->
-             let response = Dream.response Data_files.(read Index_js) in
+             let response = Dream.response Assets.(read Index_js) in
              Dream.add_header response "charset" "utf-8";
              Dream.add_header response "Content-Type" "text/javascript";
              Lwt.return response);
          Dream.get "/index.css" (fun _ ->
-             let response = Dream.response Data_files.(read Index_css) in
+             let response = Dream.response Assets.(read Index_css) in
              Dream.add_header response "charset" "utf-8";
              Dream.add_header response "Content-Type" "text/css";
              Lwt.return response);
@@ -259,4 +267,5 @@ let () =
                      Pending.add id websocket version closed;
                      (* pending_ws := (version, websocket, closed) :: !pending_ws; *)
                      loop ()));
+         Dream.get "/:document" (fun _ -> Dream.html Assets.(read Index_html));
        ]

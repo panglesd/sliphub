@@ -25,6 +25,7 @@
    (file "index.html")
    (file "index.css")
   (glob_files *.js)
+  (glob_files *.md)
   (glob_files *.css))
  (action
   (setenv
@@ -39,6 +40,8 @@
      css
      -e
      html
+     -e
+     md
      -o
      data_contents.ml
      -m
@@ -46,5 +49,5 @@
      -s))))
 
 (library
- (name data_files)
+ (name assets)
  (public_name sliphub.datafiles))
