@@ -39,7 +39,7 @@ module Comm = struct
 
   let send upd =
     let ws =
-      Brr_io.Websocket.create (Jstr.v "ws://localhost:8080/websocket/push")
+      Brr_io.Websocket.create (Jstr.v "ws://localhost:8080/websocket/push/a")
     in
     let on_open _event = send_string ws (Jstr.v upd) in
     let _open_listener = Brr.Ev.listen Brr.Ev.open' on_open (as_target ws) in
@@ -47,14 +47,13 @@ module Comm = struct
 
   let rec recv callback get_version =
     let ws =
-      Brr_io.Websocket.create (Jstr.v "ws://localhost:8080/websocket/pull")
+      Brr_io.Websocket.create (Jstr.v "ws://localhost:8080/websocket/pull/a")
     in
     let on_message event =
-      Format.printf "aaaaaaaaaaaaaa%!\n";
       let raw_data : Jstr.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
       let data = Message.of_string (Jstr.to_string raw_data) in
-      Format.printf "Here is what we received: '%s'%!\n"
-        (Jstr.to_string raw_data);
+      (* Format.printf "Here is what we received: '%s'%!\n" *)
+      (*   (Jstr.to_string raw_data); *)
       callback data;
       let version = get_version () in
       send_string ws (Jstr.v @@ string_of_int version)
@@ -82,7 +81,7 @@ let recv_updates callback get_version = Comm.recv callback get_version
 
 let getDocument () =
   let open Brr_io.Websocket in
-  let ws = create (Jstr.v "ws://localhost:8080/websocket/getDocument/aaa") in
+  let ws = create (Jstr.v "ws://localhost:8080/websocket/getDocument/a") in
   let document_of_string s =
     let json = Yojson.Safe.from_string s in
     match json with

@@ -89,11 +89,8 @@ let get_version () =
   let get_version = Collab.getSyncedVersion state in
   Format.printf "version is %d\n%!" get_version
 
-let _ =
+let pull () =
   let+ view in
-  update_slipshow view;
-  let _ = Jv.set Jv.global "view" (Editor.View.to_jv view) in
-
   let get_version () =
     let state = Editor.View.state view in
     Collab.getSyncedVersion state
@@ -105,15 +102,23 @@ let _ =
         let update =
           List.map (fun (id, change) -> Collab.Update.make change id) changes
         in
-        List.iter (fun upd -> Brr.Console.(log [ upd ])) update;
+        (* List.iter (fun upd -> Brr.Console.(log [ upd ])) update; *)
         let state = Editor.View.state view in
 
         let transaction = Collab.receiveUpdates state update in
-        Brr.Console.(log [ transaction ]);
+        (* Brr.Console.(log [ transaction ]); *)
         let _ = Editor.View.dispatch view [ transaction ] in
         ()
       in
       ())
     get_version
 
+let _ =
+  let+ view in
+  update_slipshow view;
+  let _ = pull () in
+  let _ = Jv.set Jv.global "view" (Editor.View.to_jv view) in
+  ()
+
 let _ = Jv.set Jv.global "get_version" (Jv.callback ~arity:1 get_version)
+let _ = Jv.set Jv.global "pull" (Jv.callback ~arity:1 pull)

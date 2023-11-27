@@ -9,14 +9,22 @@ module Db = struct
   let conn =
     let open Lwt_result.Syntax in
     (* ... *)
-    let* conn = Caqti_lwt.connect (Uri.of_string ("sqlite3://:" ^ "db.db")) in
+    let* conn =
+      Caqti_lwt.connect (Uri.of_string ("sqlite3:///tmp/" ^ "db.db"))
+    in
     let+ () = StaticSchema.initialise schema conn in
     conn
   (* ... *)
 
   let conn =
     let+ conn in
-    match conn with Ok c -> c | Error _ -> failwith "could not connect to db"
+    match conn with
+    | Ok c -> c
+    | Error e ->
+        let s = Format.asprintf "error: %a" Caqti_error.pp e in
+        Dream.log "%s" s;
+        Dream.log "%s" (String.map (function ' ' -> '\n' | c -> c) s);
+        failwith s
 
   module Document = struct
     (* declare a table *)
@@ -41,7 +49,7 @@ module Db = struct
             ]
       |> Request.make_zero |> Petrol.exec db
 
-    let rec find_opt id =
+    let find_opt id =
       let* db = conn in
       Query.select Expr.[ content_field; version_field ] ~from:document_table
       |> Query.where Expr.(id_field = s id)
@@ -51,6 +59,7 @@ module Db = struct
       let* db = conn in
       Query.update ~table:document_table
         ~set:Expr.[ content_field := s content; version_field := i version ]
+      |> Query.where Expr.(id_field = s id)
       |> Request.make_zero |> Petrol.exec db
   end
 
@@ -61,7 +70,7 @@ module Db = struct
         Schema.
           [
             field "id" ~ty:Type.text;
-            field "index" ~ty:Type.int;
+            field "idx" ~ty:Type.int;
             field "change" ~ty:Type.text;
           ]
 
@@ -79,11 +88,11 @@ module Db = struct
             [ doc_id := s id; modif_number := i version; modif_field := s blob ]
       |> Request.make_zero |> Petrol.exec db
 
-    let rec find_above ~id ~version =
+    let find_above ~id ~version =
       let* db = conn in
       let+ result =
         Query.select Expr.[ modif_number; modif_field ] ~from:modification_table
-        |> Query.where Expr.(doc_id = s id && modif_number >= i version)
+        |> Query.where Expr.(doc_id = s id && modif_number > i version)
         |> Query.order_by modif_number
         |> Request.make_many |> Petrol.collect_list db
       in
@@ -97,7 +106,6 @@ module Db = struct
     Document.insert ~id ~content ~version:0
 
   let rec collect_doc id =
-    let* db = conn in
     let* res = Document.find_opt id in
     match res with
     | Ok None ->
@@ -107,18 +115,20 @@ module Db = struct
     | Error _ -> failwith "collect"
 
   let update_doc ~id ~changes ~from_version =
-    let* db = conn in
     (* For the side effect that it inits the doc if needed *)
     let* content, version = collect_doc id in
     if version <> from_version then Lwt.return_ok ()
     else
       let content =
         List.fold_left
-          (fun doc (_id, change) -> Camlot.Changes.ChangeSet.apply change doc)
+          (fun doc (_id, change) ->
+            let res = Camlot.Changes.ChangeSet.apply change doc in
+            res)
           content changes
       in
+      Dream.log "Document is '%s'" content;
       let* () =
-        Lwt_list.iteri_p
+        Lwt_list.iteri_s
           (fun i modif ->
             let+ res = Changes.insert ~id ~version:(version + i + 1) ~modif in
             match res with
@@ -126,23 +136,10 @@ module Db = struct
             | Error _ -> failwith "failing to add change")
           changes
       in
-      Document.update ~id ~content ~version
+      Document.update ~id ~content ~version:(version + List.length changes)
 end
 
 open Lwt.Syntax
-
-(* let document = ref "abcde" *)
-(* let server_version = ref 0 *)
-(* let server_changes = ref [] *)
-
-let take n l =
-  let rec loop acc n l =
-    match (n, l) with
-    | 0, _ -> acc
-    | n, a :: q -> loop (a :: acc) (n - 1) q
-    | _ -> assert false
-  in
-  loop [] n l
 
 module Pending = struct
   module Tbl = Hashtbl.Make (String)
@@ -153,7 +150,7 @@ module Pending = struct
     match Tbl.find_opt tbl id with
     | None -> []
     | Some l ->
-        let l = List.filter (fun (_, _, closed) -> not !closed) l in
+        (* let l = List.filter (fun (_, _, closed) -> not !closed) l in *)
         Tbl.replace tbl id l;
         l
 
@@ -163,9 +160,26 @@ module Pending = struct
 
   let send id =
     let pendings = get id in
-    Lwt_list.iter_p
+    Dream.log "Sending to %d websockets" (List.length pendings);
+    let* () =
+      Lwt_list.iter_s
+        (fun (_ws, version, _) ->
+          Dream.log "This websocket has version %d" !version;
+          let* to_send = Db.Changes.find_above ~id ~version:!version in
+          Dream.log "and websocket will receive %d changes"
+            (List.length to_send);
+          let to_send =
+            List.map (fun (_v, blob) -> Yojson.Safe.from_string blob) to_send
+          in
+          let to_send = `List to_send |> Yojson.Safe.to_string in
+          Dream.log "as of the following string: '%s'" to_send;
+          Lwt.return ())
+        pendings
+    in
+    Lwt_list.iter_s
       (fun (ws, version, _) ->
         let* to_send = Db.Changes.find_above ~id ~version:!version in
+        (* Dream.log "One websocket receive %d changes" (List.length to_send); *)
         let to_send =
           List.map (fun (_v, blob) -> Yojson.Safe.from_string blob) to_send
         in
@@ -174,40 +188,10 @@ module Pending = struct
       pendings
 end
 
-(* let pending_ws = _ *)
-
-(* let send_to_pending id = *)
-(*   let new_pending = *)
-(*     List.filter *)
-(*       (fun (version, websocket, closed) -> *)
-(*         if !closed then false *)
-(*         else if !version <= !version then true *)
-(*         else *)
-(*           let data = take (!version - !version) _ in *)
-(*           let json = *)
-(*             `List *)
-(*               (List.map *)
-(*                  (fun (id, changes) -> *)
-(*                    `List *)
-(*                      [ *)
-(*                        `String id; *)
-(*                        `String *)
-(*                          (Yojson.Safe.to_string *)
-(*                          @@ Camlot.Changes.ChangeSet.to_JSON changes); *)
-(*                      ]) *)
-(*                  data) *)
-(*           in *)
-(*           let to_send = Yojson.Safe.to_string json in *)
-(*           let _ = Dream.send websocket to_send in *)
-(*           true) *)
-(*       !pending_ws *)
-(*   in *)
-(*   pending_ws := new_pending *)
-
 let () =
   Dream.run
   (* ~interface:"0.0.0.0" *)
-  (* @@ Dream.logger *)
+  @@ Dream.logger
   @@ Dream.router
        [
          Dream.get "/" (fun _ -> Dream.html Data_files.(read Index_html));
@@ -230,31 +214,21 @@ let () =
                      let client_version, changes =
                        Sliphub.Communication.decode msg
                      in
-                     let* document, server_version = Db.collect_doc id in
+                     let* _document, server_version = Db.collect_doc id in
+                     Dream.log "Client version is %d, server_version is %d"
+                       client_version server_version;
                      if server_version <> client_version then Lwt.return ()
                      else
                        let* _ =
                          Db.update_doc ~id ~changes ~from_version:server_version
                        in
-                       (* server_version := !server_version + List.length changes; *)
-                       (* let new_doc = *)
-                       (*   List.fold_left *)
-                       (*     (fun doc (_id, change) -> *)
-                       (*       Camlot.Changes.ChangeSet.apply change doc) *)
-                       (*     !document changes *)
-                       (* in *)
-                       (* server_changes := List.rev_append changes !server_changes; *)
-                       (* document := new_doc; *)
-                       (* Dream.log *)
-                       (* "new version is %d and new doc is %s, pending_ws has \ *)
-                          (*    size %d" *)
-                       (*   !server_version !document (List.length !pending_ws); *)
                        let _ = Pending.send id in
                        Lwt.return ()
                  | None ->
                      Lwt.return @@ Dream.log "Received an incomplete message"));
          Dream.get "/websocket/getDocument/:document" (fun request ->
              let id = Dream.param request "document" in
+             Dream.log "queryin document %s" "a";
              Dream.websocket (fun websocket ->
                  let* document, version = Db.collect_doc id in
                  let payload =

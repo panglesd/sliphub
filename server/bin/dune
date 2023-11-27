@@ -1,4 +1,4 @@
 (executable
  (public_name sliphub)
  (name main)
- (libraries sliphub dream data_files yojson petrol))
+ (libraries sliphub dream data_files yojson petrol caqti-driver-sqlite3))
