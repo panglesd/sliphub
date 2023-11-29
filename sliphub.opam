@@ -15,6 +15,11 @@ depends: [
   "js_of_ocaml"
   "dream"
   "camlot"
+  "caqti-driver-sqlite3"
+  "lwt"
+  "dream"
+  "petrol"
+  "crunch"
   "odoc" {with-doc}
 ]
 build: [

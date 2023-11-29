@@ -18,7 +18,7 @@
  (synopsis "A website to live edit your slipshow presentations")
  (description
   "A website to live edit your slipshow presentations. Can also be used to remotely store your presentations.")
- (depends ocaml dune js_of_ocaml dream camlot)
+ (depends ocaml dune js_of_ocaml dream camlot caqti-driver-sqlite3 lwt dream petrol crunch)
  (tags
   (topics "to describe" your project)))
 
