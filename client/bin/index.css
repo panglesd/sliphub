@@ -12,10 +12,23 @@ body {
 }
 
 #right-panel {
-    width: 50%;
+    position: relative;
+    /* 2px per border */
+    width: calc(50% - 4px);
+}
+
+#right-panel1, #right-panel2 {
+    width: 100%;
+    position: absolute;
     /* 2px per border */
     height: calc(100vh - 4px);
+    z-index: 0;
 }
+
+#right-panel1.active_panel, #right-panel2.active_panel {
+    z-index: 1;
+}
+
 #left-panel {
     /* 2px per border */
     width: 50%;
