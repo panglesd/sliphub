@@ -17,7 +17,7 @@ module Db = struct
   (* ... *)
 
   let conn =
-    let+ conn in
+    let+ conn = conn in
     match conn with
     | Ok c -> c
     | Error e ->
@@ -248,7 +248,11 @@ let () =
              Dream.websocket ~close:false (fun websocket ->
                  let* recv = Dream.receive websocket in
                  match recv with
-                 | None -> failwith "closed too early"
+                 | None ->
+                     Dream.log
+                       "Some websocket on pull closed before sending their id, \
+                        closing it";
+                     Dream.close_websocket websocket
                  | Some i ->
                      let version = ref (int_of_string i) in
                      let closed = ref false in

@@ -67,6 +67,7 @@ module Comm = struct
 
   let rec recv callback get_version =
     let uri = uri `Pull in
+    Brr.Console.(log [ "Opening a websocket" ]);
     let ws = Brr_io.Websocket.create (Brr.Uri.to_jstr uri) in
     let on_message event =
       let raw_data : Jstr.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
@@ -80,15 +81,23 @@ module Comm = struct
     let _message_listener =
       Brr.Ev.listen Brr_io.Message.Ev.message on_message (as_target ws)
     in
-    let on_open _event =
+    let on_open event =
+      Brr.Console.(log [ "Websocket was opened with event:"; event ]);
       let version = get_version () in
       send_string ws (Jstr.v @@ string_of_int version)
     in
     let _open_listener = Brr.Ev.listen Brr.Ev.open' on_open (as_target ws) in
-    let on_close _event = recv callback get_version in
+    let on_close event =
+      Brr.Console.(log [ "Websocket was closed with event:"; event ]);
+      recv callback get_version
+    in
     let _close_listener =
       Brr.Ev.listen Brr_io.Websocket.Ev.close on_close (as_target ws)
     in
+    let on_error event =
+      Brr.Console.(log [ "Websocket was errored with event:"; event ])
+    in
+    let _error_listener = Brr.Ev.listen Brr.Ev.error on_error (as_target ws) in
     ()
 end
 
