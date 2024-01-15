@@ -8,4 +8,5 @@
   yojson
   petrol
   caqti-driver-sqlite3
-  slip_of_mark))
+  slipshow
+))

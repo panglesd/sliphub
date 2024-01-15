@@ -6,6 +6,6 @@
   js_of_ocaml-lwt
   lwt
   code-mirror
-  slip_of_mark
+  slipshow
   camlot
   yojson))

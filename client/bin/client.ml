@@ -106,7 +106,7 @@ let update_slipshow view =
     String.concat "\n" lines
   in
   let starting_state = PreviewState.get_starting_state () in
-  let slipshow = Slip_of_mark.convert ~starting_state content in
+  let slipshow = Slipshow.convert ~starting_state content in
   PreviewState.set_srcdoc slipshow
 
 let slipshow_plugin =

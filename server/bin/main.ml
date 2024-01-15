@@ -120,12 +120,25 @@ module Db = struct
     if version <> from_version then Lwt.return_ok ()
     else
       let content =
+        let content = Sliphub.Converter.utf8_to_utf16 content in
         List.fold_left
           (fun doc (_id, change) ->
-            let res = Camlot.Changes.ChangeSet.apply change doc in
+            let change =
+              List.map
+                (function
+                  | Camlot.Changes.Keep k -> Camlot.Changes.Keep (2 * k)
+                  | Replace (i, (l_s, s)) ->
+                      Replace
+                        (2 * i, (2 * l_s, Sliphub.Converter.utf8_to_utf16 s)))
+                change
+            in
+            let res =
+              Camlot.Changes.ChangeSet.apply (* ~is_utf16:true  *) change doc
+            in
             res)
           content changes
       in
+      let content = Sliphub.Converter.utf16_to_utf8 content in
       Dream.log "Document is '%s'" content;
       let* () =
         Lwt_list.iteri_s
@@ -197,7 +210,7 @@ let () =
        [
          Dream.get "/" (fun _ ->
              let intro_pres = Assets.(read Intro_pres) in
-             let html = Slip_of_mark.convert intro_pres in
+             let html = Slipshow.convert intro_pres in
              Dream.html html);
          Dream.get "/new" (fun request ->
              let id = String.init 10 (fun _ -> Char.chr (97 + Random.int 26)) in
