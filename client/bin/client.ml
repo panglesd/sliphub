@@ -125,6 +125,11 @@ let state =
   let config = Collab.config ~start_version () in
   let collab = Collab.collab ~config () in
   let basic_setup = Jv.get Jv.global "__CM__basic_setup" |> Extension.of_jv in
+  let dark_mode =
+    let dark = Jv.get Jv.global "__CM__dark" in
+    let oneDark = Jv.get dark "oneDark" in
+    Extension.of_jv oneDark
+  in
   let markdown_extension =
     Jv.apply (Jv.get Jv.global "__CM__markdown") [||] |> Extension.of_jv
   in
@@ -132,7 +137,12 @@ let state =
     State.Config.create ~doc:(Jstr.v doc)
       ~extensions:
         [|
-          collab; peer_plugin; basic_setup; slipshow_plugin; markdown_extension;
+          collab;
+          peer_plugin;
+          basic_setup;
+          slipshow_plugin;
+          markdown_extension;
+          dark_mode;
         |]
       ()
   in
