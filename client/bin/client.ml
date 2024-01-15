@@ -191,6 +191,56 @@ let _ =
   update_slipshow view;
   let _ = pull () in
   let _ = Jv.set Jv.global "view" (Editor.View.to_jv view) in
+  let downLoadSource () =
+    let open Editor in
+    let content =
+      let state = View.state view in
+      let text = State.doc state in
+      let lines =
+        Text.to_jstr_array text |> Array.map Jstr.to_string |> Array.to_list
+      in
+      String.concat "\n" lines
+    in
+    Jv.apply
+      (Jv.get Jv.global "download")
+      [| Jv.of_string "source.md"; Jv.of_string content |]
+  in
+  Jv.set Jv.global "downLoadSource" (Jv.callback ~arity:1 downLoadSource);
+  let downloadPresentation () =
+    let open Editor in
+    let content =
+      let state = View.state view in
+      let text = State.doc state in
+      let lines =
+        Text.to_jstr_array text |> Array.map Jstr.to_string |> Array.to_list
+      in
+      String.concat "\n" lines
+    in
+    let content = Slipshow.convert content in
+    Jv.apply
+      (Jv.get Jv.global "download")
+      [| Jv.of_string "presentation.html"; Jv.of_string content |]
+  in
+  Jv.set Jv.global "downLoadPresentation"
+    (Jv.callback ~arity:1 downloadPresentation);
+  let () =
+    let uri = Brr.Window.location Brr.G.window in
+    let id =
+      let rec tl = function
+        | [] -> "aaaa"
+        | [ a ] -> Jstr.to_string a
+        | _ :: q -> tl q
+      in
+      let l = Brr.Uri.path_segments uri |> Result.get_ok in
+      tl l
+    in
+    let a =
+      Brr.El.find_first_by_selector (Jstr.v "#startPresentation") |> function
+      | Some a -> a
+      | None -> assert false
+    in
+    Brr.El.set_at Brr.At.Name.href (Some (Jstr.v @@ "view/" ^ id)) a
+  in
   ()
 
 let _ = Jv.set Jv.global "get_version" (Jv.callback ~arity:1 get_version)

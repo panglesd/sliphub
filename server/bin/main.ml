@@ -283,5 +283,10 @@ let () =
                      Pending.add id websocket version closed;
                      (* pending_ws := (version, websocket, closed) :: !pending_ws; *)
                      loop ()));
+         Dream.get "/view/:document" (fun request ->
+             let id = Dream.param request "document" in
+             let* document, _version = Db.collect_doc id in
+             let slipshow = Slipshow.convert document in
+             Dream.html slipshow);
          Dream.get "/:document" (fun _ -> Dream.html Assets.(read Index_html));
        ]

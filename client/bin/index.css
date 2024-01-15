@@ -4,11 +4,23 @@ body {
 
 #container {
     display: flex;
-    height: calc(100vh - 4px);
+    height: calc(100vh - 4px - 40px);
 }
 
 #editor {
-    height:100vh;
+    height:calc(100vh - 40px);
+}
+
+#toolbar {
+  height: 30px;
+  background: darkcyan;
+  display: flex;
+  justify-content: space-evenly;
+  padding: 5px;
+}
+
+#startPresentation {
+    display: contents;
 }
 
 #right-panel {
@@ -21,7 +33,7 @@ body {
     width: 100%;
     position: absolute;
     /* 2px per border */
-    height: calc(100vh - 4px);
+    height: calc(100vh - 4px - 40px);
     z-index: 0;
 }
 
@@ -33,7 +45,7 @@ body {
     /* 2px per border */
     width: 50%;
     /* 2px per border */
-    height: calc(100vh - 4px);
+    height: calc(100vh - 4px - 40px);
 }
 
     #editor {

@@ -4,8 +4,28 @@
 	<title></title>
 	<meta charset="utf-8" />
 	<link rel="stylesheet" href="index.css">
+        <script>
+         function download(filename, text) {
+             var element = document.createElement('a');
+             element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+             element.setAttribute('download', filename);
+
+             element.style.display = 'none';
+             document.body.appendChild(element);
+
+             element.click();
+
+             document.body.removeChild(element);
+         }
+        </script>
     </head>
     <body>
+        <div id="toolbar">
+            <input type="button" value="Download source file" onclick="downLoadSource()">
+            <input type="button" value="Save URL to clipboard" onclick="navigator.clipboard.writeText(window.location.href);alert('URL copied to clipboard. Save it somewhere to remember how to go back to the presentation.')">
+            <input type="button" value="Download presentation file" onclick="downLoadPresentation()">
+            <a id="startPresentation"><input type="button" value="Start presentation"></a>
+        </div>
 	<div id="container">
 	    <div id="left-panel">
 		<div id="editor"></div>
