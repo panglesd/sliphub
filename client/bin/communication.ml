@@ -42,7 +42,7 @@ let uri order =
     tl l
   in
   (* let host = Jstr.to_string @@ Brr.Uri.host uri in *)
-  let scheme = Jstr.v "ws" in
+  let scheme = Jstr.v "wss" in
   let uri = Brr.Uri.with_uri ~scheme uri |> Result.get_ok in
   let order =
     match order with

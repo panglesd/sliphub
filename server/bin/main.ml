@@ -203,8 +203,8 @@ end
 
 let () = Random.self_init ()
 
-let () =
-  Dream.run ~interface:"0.0.0.0"
+let _ =
+  Dream.run ~interface:"0.0.0.0" ~tls:true (* ~stop:(Lwt_unix.sleep 10.) *)
   @@ Dream.logger
   @@ Dream.router
        [
