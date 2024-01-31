@@ -3,8 +3,11 @@ module Db = struct
   open Petrol.Sqlite3
   open Lwt.Syntax
 
-  (* define a new schema *)
-  let schema = StaticSchema.init ()
+  (* schema version 1.0.0 *)
+  let version = VersionedSchema.version [ 0; 0; 1 ]
+
+  (* define a schema *)
+  let schema = VersionedSchema.init version ~name:"sliphub"
 
   let conn =
     let open Lwt_result.Syntax in
@@ -12,7 +15,7 @@ module Db = struct
     let* conn =
       Caqti_lwt.connect (Uri.of_string ("sqlite3:///tmp/" ^ "db.db"))
     in
-    let+ () = StaticSchema.initialise schema conn in
+    let+ () = VersionedSchema.initialise schema conn in
     conn
   (* ... *)
 
@@ -21,29 +24,39 @@ module Db = struct
     match conn with
     | Ok c -> c
     | Error e ->
-        let s = Format.asprintf "error: %a" Caqti_error.pp e in
+        let s =
+          match e with
+          | #Caqti_error.t as e -> Format.asprintf "error: %a" Caqti_error.pp e
+          | `Newer_version_than_supported _e ->
+              Format.asprintf "Error: Newer version than supported: %a"
+                Format.(pp_print_list pp_print_int)
+                []
+        in
         Dream.log "%s" s;
         Dream.log "%s" (String.map (function ' ' -> '\n' | c -> c) s);
         failwith s
 
   module Document = struct
     (* declare a table *)
-    let document_table, Expr.[ id_field; content_field; version_field ] =
-      StaticSchema.declare_table schema ~name:"documents"
+    let ( document_table,
+          Expr.[ id_field; show_id_field; content_field; version_field ] ) =
+      VersionedSchema.declare_table schema ~name:"documents"
         Schema.
           [
             field "id" ~ty:Type.text;
+            field "show_id" ~ty:Type.text;
             field "content" ~ty:Type.text;
             field "version" ~ty:Type.int;
           ]
 
-    let insert ~id ~content ~version =
+    let insert ~id ~content ~version ~show_id =
       let* db = conn in
       Query.insert ~table:document_table
         ~values:
           Expr.
             [
               id_field := s id;
+              show_id_field := s show_id;
               content_field := s content;
               version_field := i version;
             ]
@@ -51,8 +64,16 @@ module Db = struct
 
     let find_opt id =
       let* db = conn in
-      Query.select Expr.[ content_field; version_field ] ~from:document_table
+      Query.select
+        Expr.[ content_field; version_field; show_id_field ]
+        ~from:document_table
       |> Query.where Expr.(id_field = s id)
+      |> Request.make_zero_or_one |> Petrol.find_opt db
+
+    let find_from_show_id_opt id =
+      let* db = conn in
+      Query.select Expr.[ content_field; version_field ] ~from:document_table
+      |> Query.where Expr.(show_id_field = s id)
       |> Request.make_zero_or_one |> Petrol.find_opt db
 
     let update ~id ~content ~version =
@@ -66,7 +87,7 @@ module Db = struct
   module Changes = struct
     (* declare a table *)
     let modification_table, Expr.[ doc_id; modif_number; modif_field ] =
-      StaticSchema.declare_table schema ~name:"modifs"
+      VersionedSchema.declare_table schema ~name:"modifs"
         Schema.
           [
             field "id" ~ty:Type.text;
@@ -103,7 +124,8 @@ module Db = struct
 
   let init_doc ~id =
     let content = "# An empty slipshow presentation" in
-    Document.insert ~id ~content ~version:0
+    let show_id = String.init 10 (fun _ -> Char.chr (97 + Random.int 26)) in
+    Document.insert ~id ~content ~version:0 ~show_id
 
   let rec collect_doc id =
     let* res = Document.find_opt id in
@@ -111,12 +133,22 @@ module Db = struct
     | Ok None ->
         let* _ = init_doc ~id in
         collect_doc id
+    | Ok (Some (content, (version, (show_id, ())))) ->
+        Lwt.return (content, version, show_id)
+    | Error _ -> failwith "collect"
+
+  let rec collect_show_doc id =
+    let* res = Document.find_from_show_id_opt id in
+    match res with
+    | Ok None ->
+        let* _ = init_doc ~id in
+        collect_show_doc id
     | Ok (Some (content, (version, ()))) -> Lwt.return (content, version)
     | Error _ -> failwith "collect"
 
   let update_doc ~id ~changes ~from_version =
     (* For the side effect that it inits the doc if needed *)
-    let* content, version = collect_doc id in
+    let* content, version, _show_id = collect_doc id in
     if version <> from_version then Lwt.return_ok ()
     else
       let content =
@@ -204,7 +236,7 @@ end
 let () = Random.self_init ()
 
 let _ =
-  Dream.run ~interface:"0.0.0.0" ~tls:true (* ~stop:(Lwt_unix.sleep 10.) *)
+  Dream.run ~interface:"0.0.0.0"
   @@ Dream.logger
   @@ Dream.router
        [
@@ -234,7 +266,7 @@ let _ =
                      let client_version, changes =
                        Sliphub.Communication.decode msg
                      in
-                     let* _document, server_version = Db.collect_doc id in
+                     let* _document, server_version, _ = Db.collect_doc id in
                      Dream.log "Client version is %d, server_version is %d"
                        client_version server_version;
                      if server_version <> client_version then Lwt.return ()
@@ -250,10 +282,10 @@ let _ =
              let id = Dream.param request "document" in
              Dream.log "queryin document %s" "a";
              Dream.websocket (fun websocket ->
-                 let* document, version = Db.collect_doc id in
+                 let* document, version, show_id = Db.collect_doc id in
                  let payload =
                    Yojson.Safe.to_string
-                   @@ `List [ `Int version; `String document ]
+                   @@ `List [ `Int version; `String document; `String show_id ]
                  in
                  Dream.send websocket payload));
          Dream.get "/websocket/pull/:document" (fun request ->
@@ -285,7 +317,7 @@ let _ =
                      loop ()));
          Dream.get "/view/:document" (fun request ->
              let id = Dream.param request "document" in
-             let* document, _version = Db.collect_doc id in
+             let* document, _version = Db.collect_show_doc id in
              let slipshow = Slipshow.convert document in
              Dream.html slipshow);
          Dream.get "/:document" (fun _ -> Dream.html Assets.(read Index_html));

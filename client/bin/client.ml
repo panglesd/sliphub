@@ -118,9 +118,9 @@ let slipshow_plugin =
       let destruct () = () in
       { update; destruct })
 
-let state =
+let state_and_show_id =
   let open Editor in
-  let+ start_version, doc = Communication.getDocument () in
+  let+ start_version, doc, show_id = Communication.getDocument () in
   (* Format.printf "START VERSION IS %d\n%!" start_version; *)
   let config = Collab.config ~start_version () in
   let collab = Collab.collab ~config () in
@@ -146,8 +146,12 @@ let state =
         |]
       ()
   in
-  State.create ~config ()
+  Jv.set Jv.global "show_id" (Jv.of_string show_id);
+  (State.create ~config (), show_id)
 
+open Lwt.Infix
+
+let state, show_id = (state_and_show_id >|= fst, state_and_show_id >|= snd)
 let parent = Brr.El.find_first_by_selector (Jstr.v "#editor") |> Option.get
 
 let view =
@@ -187,6 +191,7 @@ let pull () =
     get_version
 
 let _ =
+  let* show_id = show_id in
   let+ view = view in
   update_slipshow view;
   let _ = pull () in
@@ -226,20 +231,15 @@ let _ =
   let () =
     let uri = Brr.Window.location Brr.G.window in
     let id =
-      let rec tl = function
-        | [] -> "aaaa"
-        | [ a ] -> Jstr.to_string a
-        | _ :: q -> tl q
-      in
-      let l = Brr.Uri.path_segments uri |> Result.get_ok in
-      tl l
+      Brr.Uri.with_path_segments uri [ Jstr.v "view"; Jstr.v show_id ]
+      |> Result.get_ok |> Brr.Uri.to_jstr
     in
     let a =
       Brr.El.find_first_by_selector (Jstr.v "#startPresentation") |> function
       | Some a -> a
       | None -> assert false
     in
-    Brr.El.set_at Brr.At.Name.href (Some (Jstr.v @@ "view/" ^ id)) a
+    Brr.El.set_at Brr.At.Name.href (Some id) a
   in
   ()
 

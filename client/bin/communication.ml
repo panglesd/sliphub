@@ -41,8 +41,11 @@ let uri order =
     let l = Brr.Uri.path_segments uri |> Result.get_ok in
     tl l
   in
-  (* let host = Jstr.to_string @@ Brr.Uri.host uri in *)
-  let scheme = Jstr.v "wss" in
+  let scheme =
+    match Brr.Uri.scheme uri |> Jstr.to_string with
+    | "https" -> Jstr.v "wss"
+    | _ -> Jstr.v "ws"
+  in
   let uri = Brr.Uri.with_uri ~scheme uri |> Result.get_ok in
   let order =
     match order with
@@ -114,7 +117,8 @@ let getDocument () =
   let document_of_string s =
     let json = Yojson.Safe.from_string s in
     match json with
-    | `List [ `Int version; `String document ] -> (version, document)
+    | `List [ `Int version; `String document; `String show_id ] ->
+        (version, document, show_id)
     | _ -> failwith "wrong doc received"
   in
   let promise, resolve = Lwt.wait () in
