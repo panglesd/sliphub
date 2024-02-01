@@ -46,7 +46,9 @@ let uri order =
     | "https" -> Jstr.v "wss"
     | _ -> Jstr.v "ws"
   in
-  let uri = Brr.Uri.with_uri ~scheme uri |> Result.get_ok in
+  let uri =
+    if order = `Push then uri else Brr.Uri.with_uri ~scheme uri |> Result.get_ok
+  in
   let order =
     match order with
     | `GetDoc -> "getDocument"
@@ -63,10 +65,8 @@ module Comm = struct
 
   let send upd =
     let uri = uri `Push in
-    let ws = Brr_io.Websocket.create (Brr.Uri.to_jstr uri) in
-    let on_open _event = send_string ws (Jstr.v upd) in
-    let _open_listener = Brr.Ev.listen Brr.Ev.open' on_open (as_target ws) in
-    ws
+    Js_of_ocaml_lwt.XmlHttpRequest.perform_raw_url ~contents:(`String upd)
+      (Brr.Uri.to_jstr uri |> Jstr.to_string)
 
   let rec recv callback get_version =
     let uri = uri `Pull in

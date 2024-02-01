@@ -257,27 +257,28 @@ let _ =
              Dream.add_header response "charset" "utf-8";
              Dream.add_header response "Content-Type" "text/css";
              Lwt.return response);
-         Dream.get "/websocket/push/:document" (fun request ->
+         Dream.post "/websocket/push/:document" (fun request ->
              let id = Dream.param request "document" in
-             Dream.websocket (fun websocket ->
-                 let* recv = Dream.receive websocket in
-                 match recv with
-                 | Some msg ->
-                     let client_version, changes =
-                       Sliphub.Communication.decode msg
-                     in
-                     let* _document, server_version, _ = Db.collect_doc id in
-                     Dream.log "Client version is %d, server_version is %d"
-                       client_version server_version;
-                     if server_version <> client_version then Lwt.return ()
-                     else
-                       let* _ =
-                         Db.update_doc ~id ~changes ~from_version:server_version
-                       in
-                       let _ = Pending.send id in
-                       Lwt.return ()
-                 | None ->
-                     Lwt.return @@ Dream.log "Received an incomplete message"));
+             let* msg = Dream.body request in
+             let client_version, changes =
+               try Sliphub.Communication.decode msg
+               with exn ->
+                 Dream.log "Exn %s with msg %s" (Printexc.to_string exn) msg;
+                 raise exn
+             in
+             let* _document, server_version, _ = Db.collect_doc id in
+             Dream.log "Client version is %d, server_version is %d"
+               client_version server_version;
+             let+ () =
+               if server_version <> client_version then Lwt.return ()
+               else
+                 let* _ =
+                   Db.update_doc ~id ~changes ~from_version:server_version
+                 in
+                 let _ = Pending.send id in
+                 Lwt.return ()
+             in
+             Dream.response "");
          Dream.get "/websocket/getDocument/:document" (fun request ->
              let id = Dream.param request "document" in
              Dream.log "queryin document %s" "a";
