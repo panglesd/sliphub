@@ -95,8 +95,12 @@ let slipshow_plugin =
 
 let state_and_show_id =
   let open Editor in
-  let+ { Communication.version = start_version; document = doc; show_id } =
-    Communication.getDocument ()
+  let+ {
+         Protocol.Communication.version = start_version;
+         document = doc;
+         show_id;
+       } =
+    Protocol.Communication.getDocument ()
   in
   let config = Collab.config ~start_version () in
   let collab = Collab.collab ~config () in
@@ -114,7 +118,7 @@ let state_and_show_id =
       ~extensions:
         [|
           collab;
-          Collab_protocol.peer_plugin;
+          Protocol.Collab_protocol.peer_plugin;
           basic_setup;
           slipshow_plugin;
           markdown_extension;

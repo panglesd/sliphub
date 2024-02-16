@@ -2,7 +2,7 @@ open Code_mirror
 open Common
 
 module Message = struct
-  type t = int * Collab.Update.t list
+  (* type t = int * Collab.Update.t list *)
 
   let to_string (version, fullUpdates) =
     let updates =

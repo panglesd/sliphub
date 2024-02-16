@@ -1,4 +1,13 @@
 (executable
  (name client)
  (modes js)
- (libraries brr js_of_ocaml-lwt lwt code-mirror slipshow camlot yojson common))
+ (libraries
+  brr
+  js_of_ocaml-lwt
+  lwt
+  code-mirror
+  slipshow
+  camlot
+  yojson
+  common
+  protocol))
