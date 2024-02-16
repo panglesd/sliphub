@@ -6,6 +6,13 @@ let () = Random.self_init ()
 open Common
 
 let _ =
+  let get_asset route asset mime =
+    Dream.get route (fun _ ->
+        let response = Dream.response Assets.(read asset) in
+        Dream.add_header response "charset" "utf-8";
+        Dream.add_header response "Content-Type" mime;
+        Lwt.return response)
+  in
   let index_page =
     Dream.get Routes.index_page (fun _ ->
         let intro_pres = Assets.(read Intro_pres) in
@@ -17,20 +24,8 @@ let _ =
         let id = String.init 10 (fun _ -> Char.chr (97 + Random.int 26)) in
         Dream.redirect request ("/" ^ id))
   in
-  let js_file =
-    Dream.get Routes.js_file (fun _ ->
-        let response = Dream.response Assets.(read Index_js) in
-        Dream.add_header response "charset" "utf-8";
-        Dream.add_header response "Content-Type" "text/javascript";
-        Lwt.return response)
-  in
-  let css_file =
-    Dream.get Routes.css_file (fun _ ->
-        let response = Dream.response Assets.(read Index_css) in
-        Dream.add_header response "charset" "utf-8";
-        Dream.add_header response "Content-Type" "text/css";
-        Lwt.return response)
-  in
+  let js_file = get_asset Routes.js_file Assets.Index_js "text/javascript" in
+  let css_file = get_asset Routes.css_file Assets.Index_css "text/css" in
   let send_document =
     Dream.get
       Routes.(dream_route send_document)
