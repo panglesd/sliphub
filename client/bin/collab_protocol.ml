@@ -21,17 +21,14 @@ let peer_plugin =
         in
         Communication.recv_updates
           (fun changes ->
-            let _ =
-              let update =
-                List.map
-                  (fun (id, change) -> Collab.Update.make change id)
-                  changes
-              in
-              let state = Editor.View.state view in
-              let transaction = Collab.receiveUpdates state update in
-              let _ = Editor.View.dispatch view [ transaction ] in
-              ()
+            let update =
+              List.map
+                (fun (id, change) -> Collab.Update.make change id)
+                changes
             in
+            let state = Editor.View.state view in
+            let transaction = Collab.receiveUpdates state update in
+            let _ = Editor.View.dispatch view [ transaction ] in
             ())
           get_version
       in
