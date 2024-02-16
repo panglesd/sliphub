@@ -1,29 +1,4 @@
 open Code_mirror
-
-let push view =
-  let open Editor in
-  let state = View.state view in
-  let updates = Collab.sendableUpdates state in
-  if List.is_empty updates then ()
-  else
-    let version = Collab.getSyncedVersion state in
-    let updates = List.map fst updates in
-    let _ = Communication.push_updates version updates in
-    ()
-
-let peer_plugin =
-  let open Editor in
-  View.ViewPlugin.define (fun view ->
-      let push () = push view in
-      let update upd =
-        if View.Update.docChanged upd then
-          let _ = push () in
-          ()
-        else ()
-      in
-      let destruct () = () in
-      { update; destruct })
-
 open Lwt.Syntax
 
 module Msg = struct
@@ -138,7 +113,7 @@ let state_and_show_id =
       ~extensions:
         [|
           collab;
-          peer_plugin;
+          Client_collab.peer_plugin;
           basic_setup;
           slipshow_plugin;
           markdown_extension;
@@ -159,42 +134,11 @@ let view =
   let opts = Editor.View.opts ~state ~parent () in
   Editor.View.create ~opts ()
 
-let get_version () =
-  let+ view = view in
-  let state = Editor.View.state view in
-  let get_version = Collab.getSyncedVersion state in
-  Brr.Console.(log [ ("version is ", get_version) ])
-(* Format.printf "version is %d\n%!" get_version *)
-
-let pull () =
-  let+ view = view in
-  let get_version () =
-    let state = Editor.View.state view in
-    Collab.getSyncedVersion state
-  in
-  Communication.recv_updates
-    (fun changes ->
-      (* Format.printf "receiving changes!%!\n"; *)
-      let _ =
-        let update =
-          List.map (fun (id, change) -> Collab.Update.make change id) changes
-        in
-        (* List.iter (fun upd -> Brr.Console.(log [ upd ])) update; *)
-        let state = Editor.View.state view in
-
-        let transaction = Collab.receiveUpdates state update in
-        (* Brr.Console.(log [ transaction ]); *)
-        let _ = Editor.View.dispatch view [ transaction ] in
-        ()
-      in
-      ())
-    get_version
-
 let _ =
   let* show_id = show_id in
   let+ view = view in
   update_slipshow view;
-  let _ = pull () in
+  let _ = Client_collab.pull view in
   let _ = Jv.set Jv.global "view" (Editor.View.to_jv view) in
   let downLoadSource () =
     let open Editor in
@@ -242,6 +186,3 @@ let _ =
     Brr.El.set_at Brr.At.Name.href (Some id) a
   in
   ()
-
-let _ = Jv.set Jv.global "get_version" (Jv.callback ~arity:1 get_version)
-let _ = Jv.set Jv.global "pull" (Jv.callback ~arity:1 pull)
