@@ -95,8 +95,9 @@ let slipshow_plugin =
 
 let state_and_show_id =
   let open Editor in
-  let+ start_version, doc, show_id = Communication.getDocument () in
-  (* Format.printf "START VERSION IS %d\n%!" start_version; *)
+  let+ { Communication.version = start_version; document = doc; show_id } =
+    Communication.getDocument ()
+  in
   let config = Collab.config ~start_version () in
   let collab = Collab.collab ~config () in
   let basic_setup = Jv.get Jv.global "__CM__basic_setup" |> Extension.of_jv in
@@ -113,7 +114,7 @@ let state_and_show_id =
       ~extensions:
         [|
           collab;
-          Client_collab.peer_plugin;
+          Collab_protocol.peer_plugin;
           basic_setup;
           slipshow_plugin;
           markdown_extension;
@@ -138,7 +139,6 @@ let _ =
   let* show_id = show_id in
   let+ view = view in
   update_slipshow view;
-  let _ = Client_collab.pull view in
   let _ = Jv.set Jv.global "view" (Editor.View.to_jv view) in
   let downLoadSource () =
     let open Editor in

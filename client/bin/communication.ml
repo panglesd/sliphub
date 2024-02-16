@@ -113,6 +113,8 @@ let push_updates (version : int) fullUpdates =
 
 let recv_updates callback get_version = Comm.recv callback get_version
 
+type document = { version : int; document : string; show_id : string }
+
 let getDocument () =
   let open Brr_io.Websocket in
   let uri = uri `GetDoc in
@@ -121,7 +123,7 @@ let getDocument () =
     let json = Yojson.Safe.from_string s in
     match json with
     | `List [ `Int version; `String document; `String show_id ] ->
-        (version, document, show_id)
+        { version; document; show_id }
     | _ -> failwith "wrong doc received"
   in
   let promise, resolve = Lwt.wait () in
