@@ -1,12 +1,4 @@
 (executable
  (public_name sliphub)
  (name main)
- (libraries
-  sliphub
-  dream
-  assets
-  yojson
-  petrol
-  caqti-driver-sqlite3
-  slipshow
-))
+ (libraries sliphub dream assets yojson slipshow))
