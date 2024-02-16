@@ -1,4 +1,5 @@
 open Code_mirror
+open Common
 
 module Message = struct
   type t = int * Collab.Update.t list
@@ -49,15 +50,17 @@ let uri order =
   let uri =
     if order = `Push then uri else Brr.Uri.with_uri ~scheme uri |> Result.get_ok
   in
-  let order =
-    match order with
-    | `GetDoc -> "getDocument"
-    | `Push -> "push"
-    | `Pull -> "pull"
+  let route_segment =
+    let route =
+      match order with
+      | `GetDoc -> Routes.send_document
+      | `Push -> Routes.receive_changes
+      | `Pull -> Routes.send_changes
+    in
+    let route_segment = Routes.route_segments route (Jstr.to_string id) in
+    List.map Jstr.v route_segment
   in
-  let uri =
-    Brr.Uri.with_path_segments uri [ Jstr.v "websocket"; Jstr.v order; id ]
-  in
+  let uri = Brr.Uri.with_path_segments uri route_segment in
   uri |> Result.get_ok
 
 module Comm = struct

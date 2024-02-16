@@ -1,4 +1,4 @@
 (executable
  (public_name sliphub)
  (name main)
- (libraries sliphub dream assets yojson slipshow))
+ (libraries sliphub dream assets yojson slipshow common))
