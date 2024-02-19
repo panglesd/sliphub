@@ -2,3 +2,4 @@
     and applying the received one *)
 
 val peer_plugin : Code_mirror.Extension.t
+val collab : int -> Code_mirror.Extension.t

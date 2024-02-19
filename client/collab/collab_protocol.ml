@@ -42,3 +42,8 @@ let peer_plugin =
       in
       let destruct () = () in
       { update; destruct })
+
+let collab start_version =
+  let config = Collab.config ~start_version () in
+  let collab = Collab.collab ~config () in
+  collab
