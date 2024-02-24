@@ -41,9 +41,15 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
         with:
-          name: tauri-output
-          path: ${{ steps.tauri.outputs.artifactPaths }}
+          tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
+          releaseName: "App v__VERSION__"
+          releaseBody: "See the assets to download this version and install."
+          releaseDraft: true
+          prerelease: false
+
+      # - name: Upload Artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: tauri-output
+      #     path: ${{ steps.tauri.outputs.artifactPaths }}
