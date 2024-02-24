@@ -1,0 +1,4 @@
+(rule
+ (mode promote)
+ (action
+  (copy ../../bin/client.bc.js main.js)))

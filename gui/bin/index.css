@@ -1,0 +1,91 @@
+body {
+    margin: 0;
+}
+
+#container {
+    display: flex;
+    height: calc(100vh - 4px - 40px);
+}
+
+#editor {
+    height:calc(100vh - 40px);
+}
+
+#toolbar {
+  height: 30px;
+  background: darkcyan;
+  display: flex;
+  justify-content: space-evenly;
+  padding: 5px;
+}
+
+.saved {
+    color: green;
+}
+
+.need-save {
+    color: red;
+}
+
+#startPresentation {
+    display: contents;
+}
+
+#right-panel {
+    position: relative;
+    /* 2px per border */
+    width: calc(50% - 4px);
+}
+
+#right-panel1, #right-panel2 {
+    width: 100%;
+    position: absolute;
+    /* 2px per border */
+    height: calc(100vh - 4px - 40px);
+    z-index: 0;
+}
+
+#right-panel1.active_panel, #right-panel2.active_panel {
+    z-index: 1;
+}
+
+#left-panel {
+    /* 2px per border */
+    width: 50%;
+    /* 2px per border */
+    height: calc(100vh - 4px - 40px);
+}
+
+    #editor {
+      overflow: hidden;
+      background-color: white;
+    }
+
+    .cm-editor {
+      height: 100%;
+    }
+
+    .cm-tooltip,
+    .cm-completionLabel,
+    .cm-completionMatchedText,
+    .cm-completionDetail {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+    }
+
+    .cm-editor .cm-tooltip {
+      max-width: 25rem;
+      border-radius: 0.25rem;
+      overflow: hidden;
+    }
+
+    .cm-editor .cm-tooltip-hover {
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+      padding-top: 0.25rem;
+      padding-bottom: 0.25rem;
+    }
+
+    .cm-editor .cm-content {
+      font-family: 'Fira Code', monospace;
+    }
