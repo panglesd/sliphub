@@ -6,6 +6,7 @@
   js_of_ocaml-lwt
   lwt
   code-mirror
+  fpath
   slipshow
   camlot
   yojson

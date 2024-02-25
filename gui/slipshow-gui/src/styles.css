@@ -2,6 +2,14 @@ body {
     margin: 0;
 }
 
+input[type="button"] {
+    margin-right: 10px;
+    margin-left: 10px;
+    padding-right: 10px;
+    padding-left: 10px;
+    font-size: 1.1em;
+}
+
 #container {
     display: flex;
     height: calc(100vh - 4px - 40px);
