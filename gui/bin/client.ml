@@ -77,6 +77,7 @@ let save_button view =
         | Ok () ->
             Lwd.set State.need_save false;
             Lwd.set State.path (Some path);
+            Lwd.set State.slip_path None;
             ()
       in
       match Lwd.peek State.path with
@@ -167,12 +168,18 @@ let compile_button view =
                   path |> Jstr.to_string |> Fpath.v |> Fpath.set_ext "html"
                   |> Fpath.to_string |> Jstr.v
                 in
-                Tauri_api.Dialog.save ~default_path:slipshow_path ()
+                Fut.return (Ok (Some slipshow_path))
+            (* Tauri_api.Dialog.save ~default_path:slipshow_path () *)
           in
           match new_path with
-          | Ok None -> Fut.return ()
+          | Ok None ->
+              Console.(log [ "No saving due to no slipshow path" ]);
+              Fut.return ()
           | Ok (Some new_path) -> save new_path
-          | Error _ -> failwith "____")
+          | Error err ->
+              (* TODO: make a more visible alert here *)
+              Console.(log [ "Error returned by save dialog..."; err ]);
+              Fut.return ())
       | Some path -> save path
     in
     ()
