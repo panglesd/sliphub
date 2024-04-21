@@ -5,7 +5,7 @@
   brr
   js_of_ocaml-lwt
   lwt
-  previewer
+  slipshow.previewer
   code-mirror
   slipshow
   camlot

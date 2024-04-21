@@ -1,9 +1,0 @@
-(library
- (name previewer)
- (public_name sliphub.previewer)
- (libraries
-  brr
-  slipshow
-  js_of_ocaml-lwt
-  lwt
-))
