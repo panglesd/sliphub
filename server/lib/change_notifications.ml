@@ -7,42 +7,35 @@ module Pending = struct
 
   let get id =
     match Tbl.find_opt tbl id with
-    | None -> []
-    | Some l ->
-        Tbl.replace tbl id l;
-        l
+    | None ->
+        let cond = Lwt_condition.create () in
+        Tbl.replace tbl id cond;
+        cond
+    | Some cond -> cond
 
-  let add id ws version closed =
-    let l = get id in
-    Tbl.replace tbl id ((ws, version, closed) :: l)
+  let mut = Lwt_mutex.create ()
+
+  let add id version =
+    Lwt_mutex.with_lock mut (fun () ->
+        let* to_send = Db.Changes.find_above ~id ~version in
+        match to_send with
+        | _ :: _ as to_send ->
+            let to_send =
+              List.map (fun (_v, blob) -> Yojson.Safe.from_string blob) to_send
+            in
+            `List to_send |> Yojson.Safe.to_string |> Lwt.return
+        | [] ->
+            let cond = get id in
+            let* () = Lwt_condition.wait ~mutex:mut cond in
+            let+ to_send = Db.Changes.find_above ~id ~version in
+            let to_send =
+              List.map (fun (_v, blob) -> Yojson.Safe.from_string blob) to_send
+            in
+            `List to_send |> Yojson.Safe.to_string)
 
   let send id =
-    let pendings = get id in
-    Dream.log "Sending to %d websockets" (List.length pendings);
-    let* () =
-      Lwt_list.iter_s
-        (fun (_ws, version, _) ->
-          Dream.log "This websocket has version %d" !version;
-          let* to_send = Db.Changes.find_above ~id ~version:!version in
-          Dream.log "and websocket will receive %d changes"
-            (List.length to_send);
-          let to_send =
-            List.map (fun (_v, blob) -> Yojson.Safe.from_string blob) to_send
-          in
-          let to_send = `List to_send |> Yojson.Safe.to_string in
-          Dream.log "as of the following string: '%s'" to_send;
-          Lwt.return ())
-        pendings
-    in
-    Lwt_list.iter_s
-      (fun (ws, version, _) ->
-        let* to_send = Db.Changes.find_above ~id ~version:!version in
-        let to_send =
-          List.map (fun (_v, blob) -> Yojson.Safe.from_string blob) to_send
-        in
-        let to_send = `List to_send |> Yojson.Safe.to_string in
-        Dream.send ws to_send)
-      pendings
+    let cond = get id in
+    Lwt_condition.broadcast cond ()
 end
 
 open Common
@@ -62,40 +55,21 @@ let receive_changes =
         if server_version <> client_version then Lwt.return ()
         else
           let* _ = Db.update_doc ~id ~changes ~from_version:server_version in
-          let* () = Pending.send id in
+          let () = Pending.send id in
           Lwt.return ()
       in
       Dream.response "")
 
 let send_changes =
+  (* Actually, not a websocket, but a standard get request, despite the [/websocket/pull] url... *)
   Dream.get
     Routes.(dream_route send_changes)
     (fun request ->
       let id = Dream.param request Routes.(parameter send_changes) in
-      Dream.websocket ~close:false (fun websocket ->
-          let* recv = Dream.receive websocket in
-          match recv with
-          | None ->
-              Dream.log
-                "Some websocket on pull closed before sending their id, \
-                 closing it";
-              Dream.close_websocket websocket
-          | Some i ->
-              let version = ref (int_of_string i) in
-              let closed = ref false in
-              let rec loop () =
-                let* recv = Dream.receive websocket in
-                match recv with
-                | None ->
-                    let* () = Dream.close_websocket websocket in
-                    closed := true;
-                    Lwt.return ()
-                | Some i ->
-                    version := int_of_string i;
-                    loop ()
-              in
-              Pending.add id websocket version closed;
-              (* pending_ws := (version, websocket, closed) :: !pending_ws; *)
-              loop ()))
+      let version =
+        int_of_string @@ Dream.param request Routes.(version send_changes)
+      in
+      let* to_send = Pending.add id version in
+      Dream.respond to_send)
 
 let notif_changes = [ send_changes; receive_changes ]

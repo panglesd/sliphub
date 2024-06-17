@@ -42,68 +42,61 @@ let uri order =
     let l = Brr.Uri.path_segments uri |> Result.get_ok in
     tl l
   in
-  let scheme =
-    match Brr.Uri.scheme uri |> Jstr.to_string with
-    | "https" -> Jstr.v "wss"
-    | _ -> Jstr.v "ws"
-  in
-  let uri =
-    if order = `Push then uri else Brr.Uri.with_uri ~scheme uri |> Result.get_ok
-  in
   let route_segment =
-    let route =
+    let route, version =
       match order with
-      | `GetDoc -> Routes.send_document
-      | `Push -> Routes.receive_changes
-      | `Pull -> Routes.send_changes
+      | `GetDoc -> (Routes.send_document, None)
+      | `Push -> (Routes.receive_changes, None)
+      | `Pull version -> (Routes.send_changes, Some (string_of_int version))
     in
-    let route_segment = Routes.route_segments route (Jstr.to_string id) in
+    let route_segment =
+      Routes.route_segments ?version route (Jstr.to_string id)
+    in
     List.map Jstr.v route_segment
   in
   let uri = Brr.Uri.with_path_segments uri route_segment in
   uri |> Result.get_ok
 
 module Comm = struct
-  open Brr_io.Websocket
-
   let send upd =
     let uri = uri `Push in
     Js_of_ocaml_lwt.XmlHttpRequest.perform_raw_url ~contents:(`String upd)
       (Brr.Uri.to_jstr uri |> Jstr.to_string)
 
-  let rec recv callback get_version =
-    let uri = uri `Pull in
-    Brr.Console.(log [ "Opening a websocket" ]);
-    let ws = Brr_io.Websocket.create (Brr.Uri.to_jstr uri) in
-    let on_message event =
-      let raw_data : Jstr.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
-      let data = Message.of_string (Jstr.to_string raw_data) in
-      (* Format.printf "Here is what we received: '%s'%!\n" *)
-      (*   (Jstr.to_string raw_data); *)
-      callback data;
+  let recv callback get_version =
+    let open Lwt.Syntax in
+    let rec do_ () =
       let version = get_version () in
-      send_string ws (Jstr.v @@ string_of_int version)
+      let uri = uri (`Pull version) in
+      let raw_data =
+        Brr.Console.(
+          log
+            [
+              "YOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOo pulling";
+              Brr.Uri.to_jstr uri;
+            ]);
+        let+ raw_data =
+          Js_of_ocaml_lwt.XmlHttpRequest.get
+            (Brr.Uri.to_jstr uri |> Jstr.to_string)
+        in
+        Some raw_data
+      in
+      let timeout =
+        let+ () = Js_of_ocaml_lwt.Lwt_js.sleep 3. in
+        None
+      in
+      let* raw_data = Lwt.pick [ raw_data; timeout ] in
+      match raw_data with
+      | None ->
+          Brr.Console.(log [ "Lost connection, retrying"; Brr.Uri.to_jstr uri ]);
+          do_ ()
+      | Some raw_data ->
+          let raw_data = raw_data.content in
+          let data = Message.of_string raw_data in
+          let () = callback data in
+          do_ ()
     in
-    let _message_listener =
-      Brr.Ev.listen Brr_io.Message.Ev.message on_message (as_target ws)
-    in
-    let on_open event =
-      Brr.Console.(log [ "Websocket was opened with event:"; event ]);
-      let version = get_version () in
-      send_string ws (Jstr.v @@ string_of_int version)
-    in
-    let _open_listener = Brr.Ev.listen Brr.Ev.open' on_open (as_target ws) in
-    let on_close event =
-      Brr.Console.(log [ "Websocket was closed with event:"; event ]);
-      recv callback get_version
-    in
-    let _close_listener =
-      Brr.Ev.listen Brr_io.Websocket.Ev.close on_close (as_target ws)
-    in
-    let on_error event =
-      Brr.Console.(log [ "Websocket was errored with event:"; event ])
-    in
-    let _error_listener = Brr.Ev.listen Brr.Ev.error on_error (as_target ws) in
+    let _ : unit Lwt.t = do_ () in
     ()
 end
 
@@ -116,9 +109,11 @@ let recv_updates callback get_version = Comm.recv callback get_version
 type document = { version : int; document : string; show_id : string }
 
 let getDocument () =
-  let open Brr_io.Websocket in
   let uri = uri `GetDoc in
-  let ws = create (Brr.Uri.to_jstr uri) in
+  let open Lwt.Syntax in
+  let+ { content = raw_data; _ } =
+    Js_of_ocaml_lwt.XmlHttpRequest.get (Brr.Uri.to_jstr uri |> Jstr.to_string)
+  in
   let document_of_string s =
     let json = Yojson.Safe.from_string s in
     match json with
@@ -126,14 +121,5 @@ let getDocument () =
         { version; document; show_id }
     | _ -> failwith "wrong doc received"
   in
-  let promise, resolve = Lwt.wait () in
-  let on_message event =
-    let raw_data : Jstr.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
-    let data = document_of_string (Jstr.to_string raw_data) in
-    Lwt.wakeup_later resolve data;
-    close ws
-  in
-  let _message_listener =
-    Brr.Ev.listen Brr_io.Message.Ev.message on_message (as_target ws)
-  in
-  promise
+  let data = document_of_string raw_data in
+  data

@@ -31,14 +31,14 @@ let _ =
       Routes.(dream_route send_document)
       (fun request ->
         let id = Dream.param request Routes.(parameter send_document) in
-        Dream.log "queryin document %s" "a";
-        Dream.websocket (fun websocket ->
-            let* document, version, show_id = Db.collect_doc id in
-            let payload =
-              Yojson.Safe.to_string
-              @@ `List [ `Int version; `String document; `String show_id ]
-            in
-            Dream.send websocket payload))
+        Dream.log "queryin document %s" id;
+        let* document, version, show_id = Db.collect_doc id in
+        Dream.log "document is %s" document;
+        let payload =
+          Yojson.Safe.to_string
+          @@ `List [ `Int version; `String document; `String show_id ]
+        in
+        Dream.respond payload)
   in
   let view_document =
     Dream.get

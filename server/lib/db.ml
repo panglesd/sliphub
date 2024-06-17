@@ -1,5 +1,5 @@
 open Petrol
-open Petrol.Sqlite3
+open Petrol.Postgres
 open Lwt.Syntax
 
 (* schema version 1.0.0 *)
@@ -12,11 +12,14 @@ let conn =
   let open Lwt_result.Syntax in
   (* ... *)
   let* conn =
-    Caqti_lwt_unix.connect (Uri.of_string ("sqlite3:///tmp/" ^ "db.db"))
+    Caqti_lwt_unix.connect
+      (Uri.of_string "postgresql://sliphub@localhost/sliphubDb")
   in
   let+ () = VersionedSchema.initialise schema conn in
   conn
 (* ... *)
+
+let mut = Lwt_mutex.create ()
 
 let conn =
   let+ conn = conn in
@@ -49,6 +52,7 @@ module Document = struct
         ]
 
   let insert ~id ~content ~version ~show_id =
+    Lwt_mutex.with_lock mut @@ fun () ->
     let* db = conn in
     Query.insert ~table:document_table
       ~values:
@@ -62,6 +66,7 @@ module Document = struct
     |> Request.make_zero |> Petrol.exec db
 
   let find_opt id =
+    Lwt_mutex.with_lock mut @@ fun () ->
     let* db = conn in
     Query.select
       Expr.[ content_field; version_field; show_id_field ]
@@ -70,12 +75,14 @@ module Document = struct
     |> Request.make_zero_or_one |> Petrol.find_opt db
 
   let find_from_show_id_opt id =
+    Lwt_mutex.with_lock mut @@ fun () ->
     let* db = conn in
     Query.select Expr.[ content_field; version_field ] ~from:document_table
     |> Query.where Expr.(show_id_field = s id)
     |> Request.make_zero_or_one |> Petrol.find_opt db
 
   let update ~id ~content ~version =
+    Lwt_mutex.with_lock mut @@ fun () ->
     let* db = conn in
     Query.update ~table:document_table
       ~set:Expr.[ content_field := s content; version_field := i version ]
@@ -95,6 +102,7 @@ module Changes = struct
         ]
 
   let insert ~id ~version ~modif:(mid, change) =
+    Lwt_mutex.with_lock mut @@ fun () ->
     let* db = conn in
     let change =
       Camlot.Changes.ChangeSet.to_JSON change |> Yojson.Safe.to_string
@@ -107,6 +115,7 @@ module Changes = struct
     |> Request.make_zero |> Petrol.exec db
 
   let find_above ~id ~version =
+    Lwt_mutex.with_lock mut @@ fun () ->
     let* db = conn in
     let+ result =
       Query.select Expr.[ modif_number; modif_field ] ~from:modification_table
