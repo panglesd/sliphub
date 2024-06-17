@@ -11,7 +11,9 @@ let schema = VersionedSchema.init version ~name:"sliphub"
 let conn =
   let open Lwt_result.Syntax in
   (* ... *)
-  let* conn = Caqti_lwt.connect (Uri.of_string ("sqlite3:///tmp/" ^ "db.db")) in
+  let* conn =
+    Caqti_lwt_unix.connect (Uri.of_string ("sqlite3:///tmp/" ^ "db.db"))
+  in
   let+ () = VersionedSchema.initialise schema conn in
   conn
 (* ... *)

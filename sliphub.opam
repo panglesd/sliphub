@@ -10,6 +10,7 @@ tags: ["topics" "to describe" "your" "project"]
 homepage: "https://github.com/pangled/sliphub"
 bug-reports: "https://github.com/pangled/sliphub/issues"
 depends: [
+  "brr-lwd"
   "ocaml"
   "dune" {>= "3.11"}
   "js_of_ocaml"
@@ -19,6 +20,9 @@ depends: [
   "lwt"
   "dream"
   "petrol"
+  "code-mirror"
+  "tauri_api"
+  "caqti-lwt"
   "crunch"
   "odoc" {with-doc}
 ]
