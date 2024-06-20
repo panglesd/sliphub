@@ -51,7 +51,6 @@ module Document = struct
         ]
 
   let insert ~id ~content ~version ~show_id =
-    Lwt_mutex.with_lock mut @@ fun () ->
     let* db = conn in
     Query.insert ~table:document_table
       ~values:
@@ -65,7 +64,6 @@ module Document = struct
     |> Request.make_zero |> Petrol.exec db
 
   let find_opt id =
-    Lwt_mutex.with_lock mut @@ fun () ->
     let* db = conn in
     Query.select
       Expr.[ content_field; version_field; show_id_field ]
@@ -74,14 +72,12 @@ module Document = struct
     |> Request.make_zero_or_one |> Petrol.find_opt db
 
   let find_from_show_id_opt id =
-    Lwt_mutex.with_lock mut @@ fun () ->
     let* db = conn in
     Query.select Expr.[ content_field; version_field ] ~from:document_table
     |> Query.where Expr.(show_id_field = s id)
     |> Request.make_zero_or_one |> Petrol.find_opt db
 
   let update ~id ~content ~version =
-    Lwt_mutex.with_lock mut @@ fun () ->
     let* db = conn in
     Query.update ~table:document_table
       ~set:Expr.[ content_field := s content; version_field := i version ]
@@ -101,7 +97,6 @@ module Changes = struct
         ]
 
   let insert ~id ~version ~modif:(mid, change) =
-    Lwt_mutex.with_lock mut @@ fun () ->
     let* db = conn in
     let change =
       Camlot.Changes.ChangeSet.to_JSON change |> Yojson.Safe.to_string
@@ -114,7 +109,6 @@ module Changes = struct
     |> Request.make_zero |> Petrol.exec db
 
   let find_above ~id ~version =
-    Lwt_mutex.with_lock mut @@ fun () ->
     let* db = conn in
     let+ result =
       Query.select Expr.[ modif_number; modif_field ] ~from:modification_table
@@ -132,28 +126,36 @@ let init_doc ~id =
   let show_id = String.init 10 (fun _ -> Char.chr (97 + Random.int 26)) in
   Document.insert ~id ~content ~version:0 ~show_id
 
-let rec collect_doc id =
+let lock_if c f = if c then Lwt_mutex.with_lock mut f else f ()
+
+let rec collect_doc ~lock id =
+  lock_if lock @@ fun () ->
   let* res = Document.find_opt id in
   match res with
   | Ok None ->
       let* _ = init_doc ~id in
-      collect_doc id
+      collect_doc ~lock:false id
   | Ok (Some (content, (version, (show_id, ())))) ->
       Lwt.return (content, version, show_id)
   | Error _ -> failwith "collect"
 
-let rec collect_show_doc id =
+let collect_changes ~id ~version =
+  lock_if true @@ fun () -> Changes.find_above ~id ~version
+
+let rec collect_show_doc ~lock id =
+  lock_if lock @@ fun () ->
   let* res = Document.find_from_show_id_opt id in
   match res with
   | Ok None ->
       let* _ = init_doc ~id in
-      collect_show_doc id
+      collect_show_doc ~lock:false id
   | Ok (Some (content, (version, ()))) -> Lwt.return (content, version)
   | Error _ -> failwith "collect"
 
 let update_doc ~id ~changes ~from_version =
+  lock_if true @@ fun () ->
   (* For the side effect that it inits the doc if needed *)
-  let* content, version, _show_id = collect_doc id in
+  let* content, version, _show_id = collect_doc ~lock:false id in
   if version <> from_version then Lwt.return_ok ()
   else
     let content =
@@ -186,3 +188,6 @@ let update_doc ~id ~changes ~from_version =
         changes
     in
     Document.update ~id ~content ~version:(version + List.length changes)
+
+let collect_doc = collect_doc ~lock:true
+let collect_show_doc = collect_show_doc ~lock:true

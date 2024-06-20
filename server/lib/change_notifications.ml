@@ -17,7 +17,7 @@ module Pending = struct
 
   let add id version =
     Lwt_mutex.with_lock mut (fun () ->
-        let* to_send = Db.Changes.find_above ~id ~version in
+        let* to_send = Db.collect_changes ~id ~version in
         match to_send with
         | _ :: _ as to_send ->
             let to_send =
@@ -27,7 +27,7 @@ module Pending = struct
         | [] ->
             let cond = get id in
             let* () = Lwt_condition.wait ~mutex:mut cond in
-            let+ to_send = Db.Changes.find_above ~id ~version in
+            let+ to_send = Db.collect_changes ~id ~version in
             let to_send =
               List.map (fun (_v, blob) -> Yojson.Safe.from_string blob) to_send
             in
