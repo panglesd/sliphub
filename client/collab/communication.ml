@@ -69,12 +69,6 @@ module Comm = struct
       let version = get_version () in
       let uri = uri (`Pull version) in
       let raw_data =
-        Brr.Console.(
-          log
-            [
-              "YOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOo pulling";
-              Brr.Uri.to_jstr uri;
-            ]);
         let+ raw_data =
           Js_of_ocaml_lwt.XmlHttpRequest.get
             (Brr.Uri.to_jstr uri |> Jstr.to_string)
