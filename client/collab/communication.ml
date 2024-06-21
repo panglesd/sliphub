@@ -85,10 +85,12 @@ module Comm = struct
           Brr.Console.(log [ "Lost connection, retrying"; Brr.Uri.to_jstr uri ]);
           do_ ()
       | Some raw_data ->
-          let raw_data = raw_data.content in
-          let data = Message.of_string raw_data in
-          let () = callback data in
-          do_ ()
+          if raw_data.code = 200 then
+            let raw_data = raw_data.content in
+            let data = Message.of_string raw_data in
+            let () = callback data in
+            do_ ()
+          else do_ ()
     in
     let _ : unit Lwt.t = do_ () in
     ()

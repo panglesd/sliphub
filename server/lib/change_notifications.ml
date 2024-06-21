@@ -23,15 +23,22 @@ module Pending = struct
             let to_send =
               List.map (fun (_v, blob) -> Yojson.Safe.from_string blob) to_send
             in
-            `List to_send |> Yojson.Safe.to_string |> Lwt.return
+            Lwt.return @@ `Success (`List to_send |> Yojson.Safe.to_string)
         | [] ->
             let cond = get id in
-            let* () = Lwt_condition.wait ~mutex:mut cond in
-            let+ to_send = Db.collect_changes ~id ~version in
-            let to_send =
-              List.map (fun (_v, blob) -> Yojson.Safe.from_string blob) to_send
-            in
-            `List to_send |> Yojson.Safe.to_string)
+            Lwt.catch
+              (fun () ->
+                Lwt_unix.with_timeout 5.0 @@ fun () ->
+                let* () = Lwt_condition.wait ~mutex:mut cond in
+                let+ to_send = Db.collect_changes ~id ~version in
+                let to_send =
+                  List.map
+                    (fun (_v, blob) -> Yojson.Safe.from_string blob)
+                    to_send
+                in
+                `Success (`List to_send |> Yojson.Safe.to_string))
+              (function
+                | Lwt_unix.Timeout -> Lwt.return `Failed | exn -> Lwt.fail exn))
 
   let send id =
     let cond = get id in
@@ -70,6 +77,8 @@ let send_changes =
         int_of_string @@ Dream.param request Routes.(version send_changes)
       in
       let* to_send = Pending.add id version in
-      Dream.respond to_send)
+      match to_send with
+      | `Success to_send -> Dream.respond to_send
+      | `Failed -> Dream.empty `Request_Timeout)
 
 let notif_changes = [ send_changes; receive_changes ]
