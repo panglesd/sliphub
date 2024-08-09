@@ -12,6 +12,7 @@ val new_page : no_parameter_route
 val js_file : no_parameter_route
 val css_file : no_parameter_route
 val send_document : route_with_doc_id
+val push_and_receive_changes : route_with_doc_id
 val receive_changes : route_with_doc_id
 val send_changes : route_with_doc_id
 val view_document : route_with_doc_id

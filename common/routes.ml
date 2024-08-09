@@ -10,10 +10,13 @@ let js_file = "/index.js"
 let css_file = "/index.css"
 let send_document = [ "longpolling"; "getDocument" ]
 let receive_changes = [ "longpolling"; "push" ]
+let push_and_receive_changes = [ "longpolling"; "push_and_receive" ]
 let send_changes = [ "longpolling"; "pull" ]
 let view_document = [ "view" ]
 
 let dream_route route =
   match route with
   | [ "longpolling"; "pull" ] -> "/longpolling/pull/:document/:version"
+  | [ "longpolling"; "push_and_receive" ] ->
+      "/longpolling/push_and_receive/:document/:version"
   | _ -> "/" ^ String.concat "/" route ^ "/" ^ ":document"

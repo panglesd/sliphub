@@ -47,6 +47,8 @@ let uri order =
       match order with
       | `GetDoc -> (Routes.send_document, None)
       | `Push -> (Routes.receive_changes, None)
+      | `PushAndReceive version ->
+          (Routes.push_and_receive_changes, Some (string_of_int version))
       | `Pull version -> (Routes.send_changes, Some (string_of_int version))
     in
     let route_segment =
@@ -63,6 +65,35 @@ module Comm = struct
     Js_of_ocaml_lwt.XmlHttpRequest.perform_raw_url ~contents:(`String upd)
       (Brr.Uri.to_jstr uri |> Jstr.to_string)
 
+  let send_atomic upd version =
+    let open Lwt.Syntax in
+    let uri = uri (`PushAndReceive version) in
+    let* raw_data =
+      Js_of_ocaml_lwt.XmlHttpRequest.perform_raw_url ~contents:(`String upd)
+        (Brr.Uri.to_jstr uri |> Jstr.to_string)
+    in
+    if raw_data.code = 200 then
+      let raw_data = raw_data.content in
+      let data = Message.of_string raw_data in
+      Lwt.return data
+    else Lwt.return []
+
+  let recv_atomic version =
+    let rec do_ () =
+      let open Lwt.Syntax in
+      let uri = uri (`Pull version) in
+      let* raw_data =
+        Js_of_ocaml_lwt.XmlHttpRequest.get
+          (Brr.Uri.to_jstr uri |> Jstr.to_string)
+      in
+      if raw_data.code = 200 then
+        let raw_data = raw_data.content in
+        let data = Message.of_string raw_data in
+        Lwt.return data
+      else do_ ()
+    in
+    do_ ()
+
   let recv callback get_version =
     let open Lwt.Syntax in
     let rec do_ () =
@@ -76,7 +107,7 @@ module Comm = struct
         Some raw_data
       in
       let timeout =
-        let+ () = Js_of_ocaml_lwt.Lwt_js.sleep 3. in
+        let+ () = Js_of_ocaml_lwt.Lwt_js.sleep 30. in
         None
       in
       let* raw_data = Lwt.pick [ raw_data; timeout ] in
@@ -100,6 +131,13 @@ let push_updates (version : int) fullUpdates =
   let msg = Message.to_string (version, fullUpdates) in
   Comm.send msg
 
+let push_updates_atomic (version : int) fullUpdates =
+  let msg = Message.to_string (version, fullUpdates) in
+  Comm.send_atomic msg version
+
+type updates = (string * Code_mirror.Editor.ChangeSet.t) list
+
+let recv_updates_atomic version = Comm.recv_atomic version
 let recv_updates callback get_version = Comm.recv callback get_version
 
 type document = { version : int; document : string; show_id : string }
