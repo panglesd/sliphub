@@ -2,3 +2,8 @@
  (public_name sliphub)
  (name main)
  (libraries sliphub dream assets yojson slipshow common))
+
+(executable
+ (public_name sliphub_migrate_db)
+ (name migrate_db)
+ (libraries sliphub caqti-driver-sqlite3 caqti-driver-postgresql))

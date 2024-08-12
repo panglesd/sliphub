@@ -1,5 +1,5 @@
 open Petrol
-open Petrol.Sqlite3
+open Petrol.Postgres
 open Lwt.Syntax
 
 (* schema version 1.0.0 *)
@@ -12,7 +12,8 @@ let conn =
   let open Lwt_result.Syntax in
   (* ... *)
   let* conn =
-    Caqti_lwt_unix.connect (Uri.of_string ("sqlite3:///tmp/" ^ "db.db"))
+    Caqti_lwt_unix.connect
+      (Uri.of_string "postgresql://sliphub:sliphub@localhost/sliphubDb")
   in
   let+ () = VersionedSchema.initialise schema conn in
   conn
