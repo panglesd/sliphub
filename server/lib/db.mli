@@ -1,6 +1,6 @@
 val collect_doc : string -> (string * int * string) Lwt.t
 val collect_changes : id:string -> version:int -> (int * string) list Lwt.t
-val collect_show_doc : string -> (string * int) Lwt.t
+val collect_show_doc : string -> (string * int) option Lwt.t
 
 val update_doc :
   id:string ->

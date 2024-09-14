@@ -143,14 +143,12 @@ let rec collect_doc ~lock id =
 let collect_changes ~id ~version =
   lock_if true @@ fun () -> Changes.find_above ~id ~version
 
-let rec collect_show_doc ~lock id =
+let collect_show_doc ~lock id =
   lock_if lock @@ fun () ->
   let* res = Document.find_from_show_id_opt id in
   match res with
-  | Ok None ->
-      let* _ = init_doc ~id in
-      collect_show_doc ~lock:false id
-  | Ok (Some (content, (version, ()))) -> Lwt.return (content, version)
+  | Ok None -> Lwt.return None
+  | Ok (Some (content, (version, ()))) -> Lwt.return (Some (content, version))
   | Error _ -> failwith "collect"
 
 let update_doc ~id ~changes ~from_version =

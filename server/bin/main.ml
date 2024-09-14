@@ -45,7 +45,12 @@ let _ =
       Routes.(dream_route view_document)
       (fun request ->
         let id = Dream.param request Routes.(parameter view_document) in
-        let* document, _version = Db.collect_show_doc id in
+        let* document = Db.collect_show_doc id in
+        let document =
+          match document with
+          | None -> "No document at this location"
+          | Some (doc, _) -> doc
+        in
         let slipshow = Slipshow.convert document in
         Dream.html slipshow)
   in
