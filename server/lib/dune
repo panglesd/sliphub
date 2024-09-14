@@ -1,3 +1,11 @@
 (library
  (name sliphub)
- (libraries dream yojson camlot uutf petrol caqti-driver-postgresql common lwt.unix))
+ (libraries
+  dream
+  yojson
+  camlot
+  uutf
+  petrol
+  caqti-driver-postgresql
+  common
+  lwt.unix))
