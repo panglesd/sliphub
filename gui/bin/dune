@@ -13,4 +13,6 @@
   common
   brr-lwd
   tauri_api
-  protocol))
+  protocol
+  slipshow.communication
+  slipshow.previewer))
