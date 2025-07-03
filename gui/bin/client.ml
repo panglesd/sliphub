@@ -148,7 +148,7 @@ let compile_button view =
           let list = Array.to_list array in
           Jstr.concat ~sep:Jstr.nl list
         in
-        let contents = Slipshow.convert (Jstr.to_string contents) |> Jstr.v in
+        let contents = Slipshow.convert ~width:1440 ~height:1080  (Jstr.to_string contents) |> Jstr.v in
         let+ res = Tauri_api.Fs.write_text_file ~path ~contents () in
         match res with
         | Error _ -> failwith "error when writing"
