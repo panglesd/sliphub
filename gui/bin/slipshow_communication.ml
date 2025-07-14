@@ -10,7 +10,7 @@ let update_slipshow previewer view =
     in
     String.concat "\n" lines
   in
-  let slipshow = Slipshow.delayed ~width:1440 ~height:1080 content in
+  let slipshow = Slipshow.delayed content in
   Previewer.preview_compiled previewer slipshow
 
 let slipshow_plugin =
