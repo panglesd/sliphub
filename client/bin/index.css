@@ -29,7 +29,7 @@ body {
     width: calc(50% - 4px);
 }
 
-#right-panel1, #right-panel2 {
+.right-panel1, .right-panel2 {
     width: 100%;
     position: absolute;
     /* 2px per border */
@@ -37,7 +37,7 @@ body {
     z-index: 0;
 }
 
-#right-panel1.active_panel, #right-panel2.active_panel {
+.right-panel1.active_panel, .right-panel2.active_panel {
     z-index: 1;
 }
 

@@ -16,6 +16,9 @@ let view_and_show_id =
   let markdown_extension =
     Jv.apply (Jv.get Jv.global "__CM__markdown") [||] |> Extension.of_jv
   in
+  let preview_el =
+    Brr.El.find_first_by_selector (Jstr.v ".right-panel") |> Option.get
+  in
   let config =
     State.Config.create ~doc:(Jstr.v document)
       ~extensions:
@@ -25,7 +28,7 @@ let view_and_show_id =
           dark_mode;
           Collab_protocol.collab version;
           Collab_protocol.peer_plugin;
-          Slipshow_communication.slipshow_plugin;
+          Slipshow_communication.slipshow_plugin preview_el;
         |]
       ()
   in

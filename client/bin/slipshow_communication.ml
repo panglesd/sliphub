@@ -1,27 +1,40 @@
 open Code_mirror
 
-let update_slipshow state view =
-  let open Editor in
-  let content =
-    let state = View.state view in
-    let text = State.doc state in
-    let lines =
-      Text.to_jstr_array text |> Array.map Jstr.to_string |> Array.to_list
-    in
-    String.concat "\n" lines
-  in
-  Previewer.preview state content
+let preview () =
+  let id = ref 0 in
+  let open Fut.Syntax in
+  fun ~ms state content ->
+    incr id;
+    let my_id = !id in
+    let+ () = Fut.tick ~ms in
+    if my_id = !id then Previewer.preview state content
 
-let slipshow_plugin =
-  let open Editor in
-  View.ViewPlugin.define (fun view ->
-      let state =
-        Previewer.create_previewer
-          (Brr.El.find_first_by_selector (Jstr.v "#right-panel") |> Option.get)
+let update_slipshow () =
+  let preview = preview () in
+  fun state view ->
+    let open Editor in
+    let content =
+      let state = View.state view in
+      let text = State.doc state in
+      let lines =
+        Text.to_jstr_array text |> Array.map Jstr.to_string |> Array.to_list
       in
-      update_slipshow state view;
+      String.concat "\n" lines
+    in
+    preview state content
+
+let slipshow_plugin preview_element =
+  let open Editor in
+  let update_slipshow = update_slipshow () in
+  View.ViewPlugin.define (fun view ->
+      let state = Previewer.create_previewer preview_element in
+      let _ : unit Fut.t = update_slipshow ~ms:0 state view in
       let update upd =
-        if View.Update.docChanged upd then update_slipshow state view else ()
+        let _ : unit Fut.t =
+          if View.Update.docChanged upd then update_slipshow ~ms:500 state view
+          else Fut.return ()
+        in
+        ()
       in
       let destruct () = () in
       { update; destruct })

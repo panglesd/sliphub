@@ -1,2 +1,3 @@
 (library
+   (public_name sliphub.common)
  (name common))

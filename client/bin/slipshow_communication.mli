@@ -1,4 +1,4 @@
-(** A plugin which updates a [#right-panel] HTML element with the content of the
-    code mirror editor *)
+(** A plugin which updates an HTML element with the content of the code mirror
+    editor *)
 
-val slipshow_plugin : Code_mirror.Extension.t
+val slipshow_plugin : Brr.El.t -> Code_mirror.Extension.t
