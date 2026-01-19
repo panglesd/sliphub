@@ -16,7 +16,7 @@ let _ =
   let index_page =
     Dream.get Routes.index_page (fun _ ->
         let intro_pres = Assets.(read Intro_pres) in
-        let html = Slipshow.convert intro_pres in
+        let html = Slipshow.convert ~include_speaker_view:true intro_pres in
         Dream.html html)
   in
   let new_page =
@@ -51,7 +51,7 @@ let _ =
           | None -> "No document at this location"
           | Some (doc, _) -> doc
         in
-        let slipshow = Slipshow.convert document in
+        let slipshow = Slipshow.convert ~include_speaker_view:true document in
         Dream.html slipshow)
   in
   let edit_document =

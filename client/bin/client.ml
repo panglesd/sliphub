@@ -17,7 +17,7 @@ let view_and_show_id =
     Jv.apply (Jv.get Jv.global "__CM__markdown") [||] |> Extension.of_jv
   in
   let preview_el =
-    Brr.El.find_first_by_selector (Jstr.v ".right-panel") |> Option.get
+    Brr.El.find_first_by_selector (Jstr.v "#right-panel") |> Option.get
   in
   let config =
     State.Config.create ~doc:(Jstr.v document)
