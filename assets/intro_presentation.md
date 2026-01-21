@@ -6,7 +6,7 @@
 > To create a new presentation:
 >
 > {style="text-align:center"}
-> <button>[[Click here!](/new)]{style="text-align:center; font-size:3em"} </button>
+> <button>[Click here!](/new){style="font-size:3em" target=_parent} </button>
 >
 > Then, **store the link** to be able to get back to the presentation later!
 
@@ -29,4 +29,4 @@ If you want to have more information about the syntax to write a presentation, [
 - Many attributes have a special meaning:
   - `{pause}` is a pause in the presentation
   - `up-at-unpause` puts the associated element on top of the screen at unpause
-  - see this [doc](https://slipshow.readthedocs.io/)
+  - see this [doc](https://slipshow.readthedocs.io/){target=_parent}
