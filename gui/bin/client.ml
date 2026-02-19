@@ -149,7 +149,7 @@ let compile_button view =
           Jstr.concat ~sep:Jstr.nl list
         in
         let contents =
-          Slipshow.convert ~include_speaker_view:true (Jstr.to_string contents)
+          Slipshow.convert ~has_speaker_view:true (Jstr.to_string contents)
           |> Jstr.v
         in
         let+ res = Tauri_api.Fs.write_text_file ~path ~contents () in

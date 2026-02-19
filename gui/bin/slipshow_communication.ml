@@ -10,7 +10,7 @@ let update_slipshow previewer view =
     in
     String.concat "\n" lines
   in
-  let slipshow = Slipshow.delayed content in
+  let slipshow = Slipshow.delayed ~has_speaker_view:true content in
   Previewer.preview_compiled previewer slipshow
 
 let slipshow_plugin =
@@ -18,7 +18,7 @@ let slipshow_plugin =
   let root =
     Brr.El.find_first_by_selector (Jstr.v "#right-panel") |> Option.get
   in
-  let previewer = Previewer.create_previewer root in
+  let previewer = Previewer.create_previewer ~include_speaker_view:false root in
   View.ViewPlugin.define (fun view ->
       update_slipshow previewer view;
       let update upd =

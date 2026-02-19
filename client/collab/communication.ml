@@ -26,7 +26,10 @@ module Message = struct
             (function
               | `List [ `String id; `String u ] ->
                   ( id,
-                    u |> Jstr.of_string |> Brr.Json.decode |> Result.get_ok
+                    u |> Jstr.of_string |> Brr.Json.decode
+                    |> ( function
+                    | Ok x -> x
+                    | Error _ -> failwith "Error while decoding JSON" )
                     |> Editor.ChangeSet.fromJSON )
               | _ -> failwith "wrong message format")
             updates
@@ -39,7 +42,11 @@ let uri order =
   let uri = Brr.Window.location Brr.G.window in
   let id =
     let rec tl = function [] -> Jstr.v "aaaa" | [ a ] -> a | _ :: q -> tl q in
-    let l = Brr.Uri.path_segments uri |> Result.get_ok in
+    let l =
+      Brr.Uri.path_segments uri |> function
+      | Ok x -> x
+      | Error _ -> failwith "Error while getting path segments"
+    in
     tl l
   in
   let route_segment =
@@ -57,7 +64,9 @@ let uri order =
     List.map Jstr.v route_segment
   in
   let uri = Brr.Uri.with_path_segments uri route_segment in
-  uri |> Result.get_ok
+  uri |> function
+  | Ok x -> x
+  | Error _ -> failwith "Error while setting path segments"
 
 module Comm = struct
   let send upd =
