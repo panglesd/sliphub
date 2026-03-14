@@ -148,10 +148,11 @@ let compile_button view =
           let list = Array.to_list array in
           Jstr.concat ~sep:Jstr.nl list
         in
-        let contents =
+        let contents, _warnings =
+          (* warnings are displayed in the previewer *)
           Slipshow.convert ~has_speaker_view:true (Jstr.to_string contents)
-          |> Jstr.v
         in
+        let contents = contents |> Jstr.v in
         let+ res = Tauri_api.Fs.write_text_file ~path ~contents () in
         match res with
         | Error _ -> failwith "error when writing"

@@ -26,7 +26,8 @@ let create_nav_bar show_id view =
       in
       String.concat "\n" lines
     in
-    let content = Slipshow.convert ~has_speaker_view:true content in
+    let content, _warnings = Slipshow.convert ~has_speaker_view:true content in
+    (* warnings are shown by the previewer *)
     Jv.apply
       (Jv.get Jv.global "download")
       [| Jv.of_string "presentation.html"; Jv.of_string content |]

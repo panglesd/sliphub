@@ -19,6 +19,9 @@ let view_and_show_id =
   let preview_el =
     Brr.El.find_first_by_selector (Jstr.v "#right-panel") |> Option.get
   in
+  let errors_el =
+    Brr.El.find_first_by_selector (Jstr.v "#receptacle-a-erreurs") |> Option.get
+  in
   let config =
     State.Config.create ~doc:(Jstr.v document)
       ~extensions:
@@ -28,7 +31,7 @@ let view_and_show_id =
           dark_mode;
           Collab_protocol.collab version;
           Collab_protocol.peer_plugin;
-          Slipshow_communication.slipshow_plugin preview_el;
+          Slipshow_communication.slipshow_plugin ~errors_el preview_el;
         |]
       ()
   in

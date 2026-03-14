@@ -1,14 +1,18 @@
 body {
-    margin: 0;
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 #container {
-    display: flex;
-    height: calc(100vh - 4px - 40px);
+  display: flex;
+  flex-grow: 1;
+  flex-shrink: 1;
 }
 
 #editor {
-    height:calc(100vh - 40px);
+  height: 100%;
 }
 
 #toolbar {
@@ -20,64 +24,236 @@ body {
 }
 
 #startPresentation {
-    display: contents;
+  display: contents;
 }
 
 #right-panel {
-    position: relative;
-    /* 2px per border */
-    width: calc(50% - 4px);
-}
-
-.right-panel1, .right-panel2 {
-    width: 100%;
-    position: absolute;
-    /* 2px per border */
-    height: calc(100vh - 4px - 40px);
-    z-index: 0;
-}
-
-.right-panel1.active_panel, .right-panel2.active_panel {
-    z-index: 1;
+  position: relative;
+  /* 2px per border */
+  width: calc(50% - 4px);
 }
 
 #left-panel {
-    /* 2px per border */
-    width: 50%;
-    /* 2px per border */
-    height: calc(100vh - 4px - 40px);
+  /* 2px per border */
+  width: 50%;
+  /* 2px per border */
+  height: 100%;
 }
 
-    #editor {
-      overflow: hidden;
-      background-color: white;
-    }
+#editor {
+  overflow: hidden;
+  background-color: white;
+}
 
-    .cm-editor {
-      height: 100%;
-    }
+.cm-editor {
+  height: 100%;
+}
 
-    .cm-tooltip,
-    .cm-completionLabel,
-    .cm-completionMatchedText,
-    .cm-completionDetail {
-      font-family: 'Fira Code', monospace;
-      font-size: 0.8rem;
-    }
+.cm-tooltip,
+.cm-completionLabel,
+.cm-completionMatchedText,
+.cm-completionDetail {
+  font-family: "Fira Code", monospace;
+  font-size: 0.8rem;
+}
 
-    .cm-editor .cm-tooltip {
-      max-width: 25rem;
-      border-radius: 0.25rem;
-      overflow: hidden;
-    }
+.cm-editor .cm-tooltip {
+  max-width: 25rem;
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
 
-    .cm-editor .cm-tooltip-hover {
-      padding-left: 0.5rem;
-      padding-right: 0.5rem;
-      padding-top: 0.25rem;
-      padding-bottom: 0.25rem;
-    }
+.cm-editor .cm-tooltip-hover {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
 
-    .cm-editor .cm-content {
-      font-family: 'Fira Code', monospace;
-    }
+.cm-editor .cm-content {
+  font-family: "Fira Code", monospace;
+}
+
+#receptacle-a-erreurs {
+  font-family: monospace;
+  white-space: pre;
+  background: black;
+  color: white;
+}
+
+#receptacle-a-erreurs span.fg-black {
+  color: rgb(0, 0, 0);
+}
+#receptacle-a-erreurs span.fg-red {
+  color: rgb(205, 0, 0);
+}
+#receptacle-a-erreurs span.fg-green {
+  color: rgb(0, 205, 0);
+}
+#receptacle-a-erreurs span.fg-yellow {
+  color: rgb(205, 205, 0);
+}
+#receptacle-a-erreurs span.fg-blue {
+  color: rgb(0, 0, 238);
+}
+#receptacle-a-erreurs span.fg-magenta {
+  color: rgb(205, 0, 205);
+}
+#receptacle-a-erreurs span.fg-cyan {
+  color: rgb(0, 205, 205);
+}
+#receptacle-a-erreurs span.fg-white {
+  color: rgb(229, 229, 229);
+}
+#receptacle-a-erreurs span.fg-black.faint {
+  color: rgb(0, 0, 0);
+}
+#receptacle-a-erreurs span.fg-red.faint {
+  color: rgb(136, 0, 0);
+}
+#receptacle-a-erreurs span.fg-green.faint {
+  color: rgb(0, 136, 0);
+}
+#receptacle-a-erreurs span.fg-yellow.faint {
+  color: rgb(136, 136, 0);
+}
+#receptacle-a-erreurs span.fg-blue.faint {
+  color: rgb(0, 0, 158);
+}
+#receptacle-a-erreurs span.fg-magenta.faint {
+  color: rgb(136, 0, 136);
+}
+#receptacle-a-erreurs span.fg-cyan.faint {
+  color: rgb(0, 136, 136);
+}
+#receptacle-a-erreurs span.fg-white.faint {
+  color: rgb(152, 152, 152);
+}
+#receptacle-a-erreurs span.fg-bright-black {
+  color: rgb(127, 127, 127);
+}
+#receptacle-a-erreurs span.fg-bright-red {
+  color: rgb(255, 0, 0);
+}
+#receptacle-a-erreurs span.fg-bright-green {
+  color: rgb(0, 255, 0);
+}
+#receptacle-a-erreurs span.fg-bright-yellow {
+  color: rgb(255, 255, 0);
+}
+#receptacle-a-erreurs span.fg-bright-blue {
+  color: rgb(92, 92, 255);
+}
+#receptacle-a-erreurs span.fg-bright-magenta {
+  color: rgb(255, 0, 255);
+}
+#receptacle-a-erreurs span.fg-bright-cyan {
+  color: rgb(0, 255, 255);
+}
+#receptacle-a-erreurs span.fg-bright-white {
+  color: rgb(255, 255, 255);
+}
+#receptacle-a-erreurs span.fg-bright-black.faint {
+  color: rgb(84, 84, 84);
+}
+#receptacle-a-erreurs span.fg-bright-red.faint {
+  color: rgb(170, 0, 0);
+}
+#receptacle-a-erreurs span.fg-bright-green.faint {
+  color: rgb(0, 170, 0);
+}
+#receptacle-a-erreurs span.fg-bright-yellow.faint {
+  color: rgb(170, 170, 0);
+}
+#receptacle-a-erreurs span.fg-bright-blue.faint {
+  color: rgb(61, 61, 170);
+}
+#receptacle-a-erreurs span.fg-bright-magenta.faint {
+  color: rgb(170, 0, 170);
+}
+#receptacle-a-erreurs span.fg-bright-cyan.faint {
+  color: rgb(0, 170, 170);
+}
+#receptacle-a-erreurs span.fg-bright-white.faint {
+  color: rgb(170, 170, 170);
+}
+#receptacle-a-erreurs span.bg-black {
+  background: rgb(0, 0, 0);
+}
+#receptacle-a-erreurs span.bg-red {
+  background: rgb(205, 0, 0);
+}
+#receptacle-a-erreurs span.bg-green {
+  background: rgb(0, 205, 0);
+}
+#receptacle-a-erreurs span.bg-yellow {
+  background: rgb(205, 205, 0);
+}
+#receptacle-a-erreurs span.bg-blue {
+  background: rgb(0, 0, 238);
+}
+#receptacle-a-erreurs span.bg-magenta {
+  background: rgb(205, 0, 205);
+}
+#receptacle-a-erreurs span.bg-cyan {
+  background: rgb(0, 205, 205);
+}
+#receptacle-a-erreurs span.bg-white {
+  background: rgb(229, 229, 229);
+}
+#receptacle-a-erreurs span.bg-bright-black {
+  background: rgb(127, 127, 127);
+}
+#receptacle-a-erreurs span.bg-bright-red {
+  background: rgb(255, 0, 0);
+}
+#receptacle-a-erreurs span.bg-bright-green {
+  background: rgb(0, 255, 0);
+}
+#receptacle-a-erreurs span.bg-bright-yellow {
+  background: rgb(255, 255, 0);
+}
+#receptacle-a-erreurs span.bg-bright-blue {
+  background: rgb(92, 92, 255);
+}
+#receptacle-a-erreurs span.bg-bright-magenta {
+  background: rgb(255, 0, 255);
+}
+#receptacle-a-erreurs span.bg-bright-cyan {
+  background: rgb(0, 255, 255);
+}
+#receptacle-a-erreurs span.bg-bright-white {
+  background: rgb(255, 255, 255);
+}
+.fg-default {
+  color: rgb(0, 0, 0);
+}
+.bg-default {
+  background: rgb(255, 255, 255);
+}
+.fg-reversed-default {
+  color: rgb(255, 255, 255);
+}
+.bg-reversed-default {
+  background: rgb(0, 0, 0);
+}
+#receptacle-a-erreurs span.bold {
+  font-weight: bold;
+}
+#receptacle-a-erreurs span.italic {
+  font-style: italic;
+}
+#receptacle-a-erreurs span.underline {
+  text-decoration: underline;
+}
+#receptacle-a-erreurs span.double-underline {
+  text-decoration: underline double;
+}
+#details-sliphub > #receptacle-a-erreurs:empty + summary {
+  color: rgb(110, 110, 110);
+}
+#details-sliphub {
+  background: black;
+  color: yellow;
+  font-size: 2em;
+}

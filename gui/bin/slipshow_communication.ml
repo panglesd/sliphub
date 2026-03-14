@@ -10,8 +10,19 @@ let update_slipshow previewer view =
     in
     String.concat "\n" lines
   in
-  let slipshow = Slipshow.delayed ~has_speaker_view:true content in
-  Previewer.preview_compiled previewer slipshow
+  let slipshow, warnings = Slipshow.delayed ~has_speaker_view:true content in
+  let warnings =
+    let config =
+      { Grace_ansi_renderer.Config.default with use_ansi = Some false }
+    in
+    List.map
+      (Format.asprintf "%a@.@."
+         (Grace_ansi_renderer.pp_diagnostic ?config:(Some config)
+            ~code_to_string:Diagnosis.to_code))
+      warnings
+    |> String.concat ""
+  in
+  Previewer.preview_compiled previewer (slipshow, warnings)
 
 let slipshow_plugin =
   let open Editor in
