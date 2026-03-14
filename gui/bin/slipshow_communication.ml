@@ -29,7 +29,11 @@ let slipshow_plugin =
   let root =
     Brr.El.find_first_by_selector (Jstr.v "#right-panel") |> Option.get
   in
-  let previewer = Previewer.create_previewer ~include_speaker_view:false root in
+  (* TODO: do *)
+  let previewer =
+    Previewer.create_previewer ~errors_el:(Brr.El.div []) ~steal_focus:false
+      ~include_speaker_view:false root
+  in
   View.ViewPlugin.define (fun view ->
       update_slipshow previewer view;
       let update upd =
