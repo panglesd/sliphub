@@ -148,9 +148,13 @@ let compile_button view =
           let list = Array.to_list array in
           Jstr.concat ~sep:Jstr.nl list
         in
+        let entry_point = Fpath.v "-" in
+        let read_file f =
+          if Fpath.equal entry_point f then Ok (Some (Jstr.to_string contents)) else Ok None
+        in
         let contents, _warnings =
           (* warnings are displayed in the previewer *)
-          Slipshow.convert ~has_speaker_view:true (Jstr.to_string contents)
+          Slipshow.convert ~has_speaker_view:true ~read_file entry_point
         in
         let contents = contents |> Jstr.v in
         let+ res = Tauri_api.Fs.write_text_file ~path ~contents () in

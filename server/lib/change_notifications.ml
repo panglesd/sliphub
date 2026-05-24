@@ -1,7 +1,7 @@
 open Lwt.Syntax
 
 module Pending = struct
-  module Tbl = Hashtbl.Make (String)
+  module Tbl = Hashtbl
 
   let tbl = Tbl.create 100
 

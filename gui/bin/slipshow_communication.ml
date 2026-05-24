@@ -10,7 +10,13 @@ let update_slipshow previewer view =
     in
     String.concat "\n" lines
   in
-  let slipshow, warnings = Slipshow.delayed ~has_speaker_view:true content in
+  let entry_point = Fpath.v "-" in
+  let read_file f =
+    if Fpath.equal entry_point f then Ok (Some content) else Ok None
+  in
+  let slipshow, warnings =
+    Slipshow.delayed ~has_speaker_view:true ~read_file entry_point
+  in
   let warnings =
     let config =
       { Grace_ansi_renderer.Config.default with use_ansi = Some false }

@@ -42,6 +42,7 @@ module Document = struct
   (* declare a table *)
   let ( document_table,
         Expr.[ id_field; show_id_field; content_field; version_field ] ) =
+    (* TODO: Add a Primary key *)
     VersionedSchema.declare_table schema ~name:"documents"
       Schema.
         [
@@ -89,6 +90,7 @@ end
 module Changes = struct
   (* declare a table *)
   let modification_table, Expr.[ doc_id; modif_number; modif_field ] =
+    (* TODO: Add a Primary key *)
     VersionedSchema.declare_table schema ~name:"modifs"
       Schema.
         [

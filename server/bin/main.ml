@@ -16,8 +16,12 @@ let _ =
   let index_page =
     Dream.get Routes.index_page (fun _ ->
         let intro_pres = Assets.(read Intro_pres) in
+        let entry_point = Fpath.v "-" in
+        let read_file f =
+          if Fpath.equal entry_point f then Ok (Some intro_pres) else Ok None
+        in
         let html, _warnings =
-          Slipshow.convert ~has_speaker_view:true intro_pres
+          Slipshow.convert ~has_speaker_view:true ~read_file entry_point
         in
         Dream.html html)
   in
@@ -53,8 +57,12 @@ let _ =
           | None -> "No document at this location"
           | Some (doc, _) -> doc
         in
+        let entry_point = Fpath.v "-" in
+        let read_file f =
+          if Fpath.equal entry_point f then Ok (Some document) else Ok None
+        in
         let slipshow, _warnings =
-          Slipshow.convert ~has_speaker_view:true document
+          Slipshow.convert ~has_speaker_view:true ~read_file entry_point
         in
         Dream.html slipshow)
   in
