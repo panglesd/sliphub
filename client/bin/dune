@@ -2,8 +2,8 @@
  (name client)
  (modes js)
  (libraries
-   brr
-   slipshow.slipshow_communication
+  brr
+  slipshow.slipshow_communication
   js_of_ocaml-lwt
   lwt
   slipshow.previewer
@@ -14,4 +14,3 @@
   common
   protocol)
  (modules client top_bar))
-

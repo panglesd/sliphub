@@ -26,7 +26,7 @@ let create_nav_bar show_id view =
       in
       String.concat "\n" lines
     in
-  let entry_point = Fpath.v "-" in
+    let entry_point = Fpath.v "-" in
     let read_file f =
       if Fpath.equal entry_point f then Ok (Some content) else Ok None
     in

@@ -150,7 +150,8 @@ let compile_button view =
         in
         let entry_point = Fpath.v "-" in
         let read_file f =
-          if Fpath.equal entry_point f then Ok (Some (Jstr.to_string contents)) else Ok None
+          if Fpath.equal entry_point f then Ok (Some (Jstr.to_string contents))
+          else Ok None
         in
         let contents, _warnings =
           (* warnings are displayed in the previewer *)

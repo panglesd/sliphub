@@ -1,4 +1,4 @@
 (library
  (name protocol)
-  (public_name sliphub.protocol)
+ (public_name sliphub.protocol)
  (libraries brr js_of_ocaml-lwt lwt code-mirror camlot yojson common))
