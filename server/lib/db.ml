@@ -126,7 +126,11 @@ module Changes = struct
 end
 
 let init_doc ~id =
-  let content = "# An empty slipshow presentation" in
+  let content =
+    {|# An empty slipshow presentation
+
+Head to the [docs](https://docs.slipshow.org) for examples and syntax documentation|}
+  in
   let show_id = String.init 10 (fun _ -> Char.chr (97 + Random.int 26)) in
   Document.insert ~id ~content ~version:0 ~show_id
 
