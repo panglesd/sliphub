@@ -1,12 +1,12 @@
 # SlipHub
 
-**Sliphub** is a hub for slipshow presentations. It helps you write one, and hosts it.
+**Sliphub** is a hub for [slipshow](https://slipshow.org) presentations. It helps you write one, and hosts it.
 
 {.block}
-> To create a new presentation:
+> Getting started is straightforward:
 >
 > {style="text-align:center"}
-> <button>[Click here!](/new){style="font-size:3em" target=_parent} </button>
+> <button>[Create a presentation!](/new){style="font-size:3em" target=_parent} </button>
 >
 > Then, **store the link** to be able to get back to the presentation later!
 
