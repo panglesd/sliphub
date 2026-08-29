@@ -155,7 +155,8 @@ let compile_button view =
         in
         let contents, _warnings =
           (* warnings are displayed in the previewer *)
-          Slipshow.convert ~has_speaker_view:true ~read_file entry_point
+          Slipshow.convert ~embed_loc:false ~has_speaker_view:true ~read_file
+            ~directory:(Fpath.v "./") entry_point
         in
         let contents = contents |> Jstr.v in
         let+ res = Tauri_api.Fs.write_text_file ~path ~contents () in

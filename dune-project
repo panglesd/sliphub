@@ -23,9 +23,9 @@
   ocaml
   dune
   js_of_ocaml
-  dream
   camlot
   caqti-driver-sqlite3
+  caqti-driver-postgresql
   lwt
   dream
   petrol

@@ -14,9 +14,9 @@ depends: [
   "ocaml"
   "dune" {>= "3.11"}
   "js_of_ocaml"
-  "dream"
   "camlot"
   "caqti-driver-sqlite3"
+  "caqti-driver-postgresql"
   "lwt"
   "dream"
   "petrol"
@@ -41,3 +41,8 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/pangled/sliphub.git"
+pin-depends: [
+  ["camlot.dev" "git+https://github.com/panglesd/camlot#main"]
+  ["code-mirror.dev" "git+https://github.com/panglesd/jsoo-code-mirror#collab"]
+  ["tauri_api.dev" "git+https://github.com/panglesd/ocaml-tauri#main"]
+]
