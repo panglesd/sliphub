@@ -11,7 +11,7 @@
 
 (maintainers "Paul-Elliot Anglès d'Auriac")
 
-(license GPL-3.0-or-later)
+(license AGPL-3.0-or-later)
 
 (package
  (name sliphub)
