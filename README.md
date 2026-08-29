@@ -15,7 +15,7 @@ This repository contains:
 
 ## Hosting
 
-Sliphub is possible easy to self-host.
+Sliphub is self-hostable. Self-host it!
 
 ### Requirements
 
@@ -41,18 +41,18 @@ Remember the password!
 
 ### Install Sliphub
 
-We suppose `opam` is installed and setup. Install Sliphub's OCaml dependencies:
+We suppose `opam` is installed and setup. Install Sliphub through it:
 
 ```shell
 opam pin sliphub git+https://github.com/panglesd/sliphub#main
 ```
 
-## Run
+## Run Sliphub
 
-You just need to pass the role's password through an environment variable:
+You just need to pass the URL to access the database through an environment variable:
 
 ```shell
-$ export DATABASE_URL="postgresql://sliphub:<password of your choice>@localhost"
+$ export DATABASE_URL="postgresql://sliphub:<password of your choice>@localhost/sliphub_db"
 $ sliphub --port 8080
 ```
 

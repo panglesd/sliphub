@@ -2,4 +2,5 @@ pin-depends: [
   ["camlot.dev" "git+https://github.com/panglesd/camlot#main"]
   ["code-mirror.dev" "git+https://github.com/panglesd/jsoo-code-mirror#collab"]
   ["tauri_api.dev" "git+https://github.com/panglesd/ocaml-tauri#main"]
+  ["slipshow.dev" "git+https://github.com/panglesd/slipshow#53040d0fc96ef12a2f11118883a32e6ab479e113"]
 ]

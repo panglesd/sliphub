@@ -7,8 +7,8 @@ maintainer: ["Paul-Elliot Anglès d'Auriac"]
 authors: ["Paul-Elliot Anglès d'Auriac"]
 license: "GPL-3.0-or-later"
 tags: ["topics" "to describe" "your" "project"]
-homepage: "https://github.com/pangled/sliphub"
-bug-reports: "https://github.com/pangled/sliphub/issues"
+homepage: "https://github.com/panglesd/sliphub"
+bug-reports: "https://github.com/panglesd/sliphub/issues"
 depends: [
   "brr-lwd"
   "ocaml"
@@ -22,6 +22,7 @@ depends: [
   "petrol"
   "code-mirror"
   "tauri_api"
+  "slipshow"
   "caqti-lwt"
   "crunch"
   "odoc" {with-doc}
@@ -40,9 +41,10 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/pangled/sliphub.git"
+dev-repo: "git+https://github.com/panglesd/sliphub.git"
 pin-depends: [
   ["camlot.dev" "git+https://github.com/panglesd/camlot#main"]
   ["code-mirror.dev" "git+https://github.com/panglesd/jsoo-code-mirror#collab"]
   ["tauri_api.dev" "git+https://github.com/panglesd/ocaml-tauri#main"]
+  ["slipshow.dev" "git+https://github.com/panglesd/slipshow#53040d0fc96ef12a2f11118883a32e6ab479e113"]
 ]
