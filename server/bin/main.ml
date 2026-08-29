@@ -5,7 +5,7 @@ let () = Random.self_init ()
 
 open Common
 
-let _ =
+let () =
   let get_asset route asset mime =
     Dream.get route (fun _ ->
         let response = Dream.response Assets.(read asset) in
@@ -71,7 +71,12 @@ let _ =
   let edit_document =
     Dream.get "/:document" (fun _ -> Dream.html Assets.(read Index_html))
   in
-  Dream.run ~interface:"0.0.0.0"
+  let port = ref 8080 in
+  let () =
+    let port_arg = [ ("--port", Arg.Set_int port, "Set port to use") ] in
+    Arg.parse port_arg (fun _ -> ()) "sliphub [--port <port>]"
+  in
+  Dream.run ~interface:"0.0.0.0" ~port:!port
   @@ Dream.logger
   @@ Dream.router
        (Change_notifications.notif_changes
