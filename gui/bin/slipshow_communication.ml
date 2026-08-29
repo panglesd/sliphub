@@ -15,7 +15,8 @@ let update_slipshow previewer view =
     if Fpath.equal entry_point f then Ok (Some content) else Ok None
   in
   let slipshow, warnings =
-    Slipshow.delayed ~has_speaker_view:true ~read_file entry_point
+    Slipshow.delayed ~embed_loc:false ~has_speaker_view:true ~read_file
+      ~directory:(Fpath.v "./") entry_point
   in
   let warnings =
     let config =
@@ -38,7 +39,10 @@ let slipshow_plugin =
   (* TODO: do *)
   let previewer =
     Previewer.create_previewer ~errors_el:(Brr.El.div []) ~steal_focus:false
-      ~include_speaker_view:false root
+      ~include_speaker_view:false ~can_save:false
+      ~save_coordinate:(fun ~id:_ ~coord:_ -> ())
+      ~goto_loc:(fun _ -> ())
+      ~can_gui:false root
   in
   View.ViewPlugin.define (fun view ->
       update_slipshow previewer view;

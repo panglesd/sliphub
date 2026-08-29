@@ -1,0 +1,5 @@
+pin-depends: [
+  ["camlot.dev" "git+https://github.com/panglesd/camlot#main"]
+  ["code-mirror.dev" "git+https://github.com/panglesd/jsoo-code-mirror#collab"]
+  ["tauri_api.dev" "git+https://github.com/panglesd/ocaml-tauri#main"]
+]
