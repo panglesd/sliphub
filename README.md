@@ -21,7 +21,7 @@ Sliphub is self-hostable. Self-host it!
 
 In order to self-host sliphub, you'll need:
 - Linux or Mac. Windows support will be added later.
-- OCaml and it's package manager, Opam. The former will be installed by the
+- OCaml and its package manager, Opam. The former will be installed by the
   latter. Follow the instructions of the [official installation
   guide](https://ocaml.org/install#linux_mac_bsd).
 - [PostgreSQL](https://www.postgresql.org/). Follow the instruction of your
@@ -41,10 +41,11 @@ Remember the password!
 
 ### Install Sliphub
 
-We suppose `opam` is installed and setup. Install Sliphub through it:
+We suppose `opam` is installed and setup. Install Sliphub in a dedicated switch:
 
 ```shell
-opam pin sliphub git+https://github.com/panglesd/sliphub#main
+$ opam switch create sliphub 5.5.0
+$ opam pin sliphub git+https://github.com/panglesd/sliphub#main
 ```
 
 ## Run Sliphub
@@ -53,7 +54,7 @@ You just need to pass the URL to access the database through an environment vari
 
 ```shell
 $ export DATABASE_URL="postgresql://sliphub:<password of your choice>@localhost/sliphub_db"
-$ sliphub --port 8080
+$ opam exec -- sliphub --port 8080
 ```
 
 Connect to `localhost:8080`: this is your self-hosted sliphub server!
