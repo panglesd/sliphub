@@ -5,7 +5,7 @@
 (generate_opam_files true)
 
 (source
- (github pangled/sliphub))
+ (github panglesd/sliphub))
 
 (authors "Paul-Elliot Anglès d'Auriac")
 
@@ -31,6 +31,7 @@
   petrol
   code-mirror
   tauri_api
+  slipshow
   caqti-lwt
   crunch)
  (tags
