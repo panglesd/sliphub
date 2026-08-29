@@ -11,10 +11,12 @@ let schema = VersionedSchema.init version ~name:"sliphub"
 let conn =
   let open Lwt_result.Syntax in
   (* ... *)
-  let* conn =
-    Caqti_lwt_unix.connect
-      (Uri.of_string "postgresql://sliphub:sliphub@localhost/sliphubDb")
+  let url =
+    match Sys.getenv_opt "DATABASE_URL" with
+    | None -> "postgresql://sliphub:sliphub@localhost"
+    | Some s -> s
   in
+  let* conn = Caqti_lwt_unix.connect (Uri.of_string url) in
   let+ () = VersionedSchema.initialise schema conn in
   conn
 (* ... *)
