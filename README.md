@@ -1,12 +1,59 @@
-# GUIs for slipshow
+# Sliphub
 
-WIP.
+This repository contains:
+- The [sliphub](https://sliphub.slipshow.org) source code. Sliphub is a web
+  frontend for [slipshow](https://slipshow.org), where you can create
+  presentations in the browser, with an editor on the left and a preview on the
+  right.
+- The Slipshow GUI. This is a Tauri app version of sliphub, for local
+  development. The development of the GUI is currently paused, to focus on the
+  development of slipshow and the local editor experience, and assess whether
+  the Tauri app still makes sense when slipshow has good editor integration and
+  easy installation.
 
-This repository contains experiments for [slipshow](https://github.com/panglesd/slipshow)'s GUI. Mainly targeted for windows users (where `slipshow --serve` is not supported), and users uncomfortable with the command line.
+<!-- ![image](https://github.com/panglesd/sliphub/assets/34110029/0fa89041-08ba-4a95-aec7-b47664cabd8c) -->
 
-Currently, it hosts the [sliphub's website](https://sliphub.choum.net) (with a collaborative editing editor), as well as a [tauri](https://tauri.app) GUI for local editing of files. See the releases page to try it!
+## Hosting
 
-![image](https://github.com/panglesd/sliphub/assets/34110029/0fa89041-08ba-4a95-aec7-b47664cabd8c)
+Sliphub is possible easy to self-host.
 
+### Requirements
 
-Next experiment: a VSCode extension.
+In order to self-host sliphub, you'll need:
+- Linux or Mac. Windows support will be added later.
+- OCaml and it's package manager, Opam. The former will be installed by the
+  latter. Follow the instructions of the [official installation
+  guide](https://ocaml.org/install#linux_mac_bsd).
+- [PostgreSQL](https://www.postgresql.org/). Follow the instruction of your
+  distribution.
+
+### Setup Postgresql
+
+Sliphub will need a role with a password and a database. Create those with
+`psql` and `createdb`:
+
+```shell
+$ sudo -u postgres psql -c "CREATE ROLE sliphub LOGIN PASSWORD '<password of your choice>';"
+$ sudo -u postgres createdb -O sliphub sliphub_db
+```
+
+Remember the password!
+
+### Install Sliphub
+
+We suppose `opam` is installed and setup. Install Sliphub's OCaml dependencies:
+
+```shell
+opam pin sliphub git+https://github.com/panglesd/sliphub#main
+```
+
+## Run
+
+You just need to pass the role's password through an environment variable:
+
+```shell
+$ export DATABASE_URL="postgresql://sliphub:<password of your choice>@localhost"
+$ sliphub --port 8080
+```
+
+Connect to `localhost:8080`: this is your self-hosted sliphub server!
